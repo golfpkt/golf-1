@@ -101,27 +101,23 @@ public class Main
     o.addFlag(
       "version", 
       "Display golf application server version info and exit."
+    ).addSection(
+      "GENERAL OPTIONS",
+      "General configuration of the golf application server. These options "+
+      "will be rolled into the war file (where appropriate) if deploying to "+
+      "production, or used in the built-in servlet container for devmode "+
+      "operation."
     ).addOpt(
       "port",
-      "Set the port the server will listen on."
+      "Set the port the server will listen on (optional, devmode only)."
     ).addOpt(
       "displayname",
       "The display name to use for deploying as a war file into a servlet "+
-      "container."
+      "container (optional)."
     ).addOpt(
       "description",
       "Description of app when deploying as a war file into a servlet "+
-      "container."
-    ).addOpt(
-      "awspublic",
-      "The amazon aws access key ID to use for cloudfront caching."
-    ).addOpt(
-      "awsprivate",
-      "The amazon aws secret access key corresponding to the aws access "+
-      "key ID specified with the --awspublic option."
-    ).addOpt(
-      "cloudfronts",
-      "How many CloudFront distributions to create."
+      "container (optional)."
     ).addOpt(
       "pool-size",
       "How many concurrent proxymode client virtual machines to allow."
@@ -129,6 +125,48 @@ public class Main
       "pool-expire",
       "Minimum idle time (seconds) before a proxymode client virtual "+
       "machine can be scavenged."
+    ).addSection(
+      "AMAZON WEB SERVICES CONFIGURATION OPTIONS",
+      "The awspublic and awsprivate options provide the golf server with "+
+      "your AWS credentials. This enables it to automatically upload the "+
+      "application to CloudFront when deploying to production. AWS is not "+
+      "used in devmode."
+    ).addOpt(
+      "awspublic",
+      "The amazon aws access key ID to use for cloudfront caching (required "+
+      "when using AWS)."
+    ).addOpt(
+      "awsprivate",
+      "The amazon aws secret access key corresponding to the aws access "+
+      "key ID specified with the --awspublic option (required when using AWS)."
+    ).addOpt(
+      "cloudfronts",
+      "How many CloudFront distributions to create (optional). This may be "+
+      "useful for getting browsers to load things in parallel rather than "+
+      "one at a time. On the other hand, it may be useless."
+    ).addSection(
+      "HTTP PROXY CONFIGURATION OPTIONS",
+      "The golf application server ships with a built-in HTTP proxy servlet "+
+      "that can be used to provide access to backend web services without "+
+      "needing to resort to using JSONP or the 'window.name' hack."
+    ).addOpt(
+      "proxyhost",
+      "The host to proxy to (required when using the built-in HTTP proxy)."
+    ).addOpt(
+      "proxyport",
+      "The port to proxy to (optional)."
+    ).addOpt(
+      "proxypath",
+      "The context path to prepend to HTTP proxy request URIs (optional)."
+    ).addOpt(
+      "proxymaxupload",
+      "The maximum file upload size for HTTP proxy requests (optional, in "+
+      "bytes)."
+    ).addSection(
+      "WAR FILE CONFIGURATION OPTIONS",
+      "The golf application server jar file is able to roll a golf "+
+      "application into a war file for deployment to a servlet container "+
+      "for production. These options govern how this is done."
     ).addFlag(
       "compress-js",
       "Whether to yuicompress javascript resource files (production only)."
@@ -158,6 +196,10 @@ public class Main
     o.setOpt("devmode",       "false");
     o.setOpt("awspublic",     null);
     o.setOpt("awsprivate",    null);
+    o.setOpt("proxyhost",     null);
+    o.setOpt("proxyport",     "80");
+    o.setOpt("proxypath",     null);
+    o.setOpt("proxymaxupload",String.valueOf(10*1024*1024));
     o.setOpt("cloudfronts",   String.valueOf(NUM_CFDOMAINS));
     o.setOpt("pool-size",     String.valueOf(NUM_VMPOOL));
     o.setOpt("pool-expire",   String.valueOf(NUM_VMEXPIRE));
