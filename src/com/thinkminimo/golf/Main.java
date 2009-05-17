@@ -185,7 +185,8 @@ public class Main
     ).addVarArg(
       "<backend name> <backend root>",
       "The backend webapp context path and location of .war file or approot "+
-      "(not used when building HTTP proxy war files)."
+      "(not used when building HTTP proxy war files). Zero or more of these "+
+      "pairs may be specified here."
     );
 
     // default values for command line options
