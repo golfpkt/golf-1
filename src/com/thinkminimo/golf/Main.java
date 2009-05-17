@@ -294,7 +294,6 @@ public class Main
         doServer();
     } catch (Exception e) {
       System.err.println("golf: "+e.getMessage());
-      e.printStackTrace();
       System.exit(1);
     }
 
@@ -305,7 +304,6 @@ public class Main
     try {
       Main m = new Main(argv);
     } catch (Exception e) {
-      e.printStackTrace();
       System.exit(1);
     }
   }
