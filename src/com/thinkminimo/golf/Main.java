@@ -81,6 +81,8 @@ public class Main
   private   static RingList<String>   mCfDomains      = null;
   private   static String             mNewHtml        = null;
 
+  private   static String             mAppName        = null;
+
   private   static HashMap<String, String> mApps      = null;
   private   static HashMap<String, String> mBackends  = null;
 
@@ -150,10 +152,11 @@ public class Main
       "The golf application server ships with a built-in HTTP proxy servlet "+
       "that can be used to provide access to backend web services without "+
       "needing to resort to using JSONP or the 'window.name' hack."
-    ).addFlag(
-      "proxy",
-      "If present, build HTTP proxy servlet war file and exit, instead of "+
-      "starting the embedded servlet container."
+    ).addOpt(
+      "proxyhost",
+      "The remote URI that the HTTP proxy will relay requests to. This will "+
+      "produce a war file containing the configured proxy servlet and exit, "+
+      "instead of starting the embedded servlet container."
     ).addOpt(
       "proxymaxupload",
       "The maximum file upload size for HTTP proxy requests (optional, in "+
@@ -174,19 +177,56 @@ public class Main
       "If present, create war file instead of starting embedded servlet "+
       "container."
     ).addArg(
-      "appname/proxyname",
-      "The name of your app. This will be the servlet context path. When "+
-      "building HTTP proxy war file this is the local context path of the "+
-      "HTTP proxy servlet."
-    ).addArg(
-      "approot/proxyhost",
-      "The location of the app source directory, or when building HTTP proxy "+
-      "war file, the remote host URI."
+      "approot|proxypath",
+      "The location of the golf app root directory, or when building HTTP "+
+      "proxy, the desired name of the resulting war file (.war extension "+
+      "will be added). When this argument specifies a golf approot, the "+
+      "application context path (or war file name, in the case of the --war "+
+      "option) is derived from the basename of the specified directory."
     ).addVarArg(
-      "<backend name> <backend root>",
-      "The backend webapp context path and location of .war file or approot "+
-      "(not used when building HTTP proxy war files). Zero or more of these "+
-      "pairs may be specified here."
+      "backend [backend...]",
+      "The backend webapp war file or approot (not used when building HTTP "+
+      "proxy war files). Zero or more war files or directories may be "+
+      "specified here. The context path they are deployed to is taken from "+
+      "the basename of the war file or directory."
+    ).addExample(
+      "RUN LOCAL DEVMODE SERVER WITH NO BACKEND",
+      "java -jar golf.jar ./apps/demo",
+      "This starts the golf application server, running the golf application "+
+      "locally from the embedded servlet container. The application will be "+
+      "accessible at the URL http://localhost:4653/demo/, and the approot is "+
+      "set to the ./apps/demo/ directory."
+    ).addExample(
+      "RUN LOCAL DEVMODE SERVER WITH BACKEND",
+      "java -jar golf.jar ./apps/demo data1.war data2.war",
+      "This starts the golf application server, locally, as in the previous "+
+      "example, accessible at the URL http://localhost:4653/demo/, etc. "+
+      "Additionally, data1.war and data2.war (backend applications) will be "+
+      "deployed to the /data1/ and /data2/ context paths."
+    ).addExample(
+      "PREPARE WAR FILE FOR DEPLOYMENT TO PRODUCTION",
+      "java -jar golf.jar --war ./apps/demo",
+      "Instead of starting the local golf application server, a war file is "+
+      "produced containing the golf application, in this case 'demo.war' is "+
+      "the resulting file. This war file can then be deployed to the "+
+      "production servlet container."
+    ).addExample(
+      "PREPARE WAR FILE FOR DEPLOYMENT TO PRODUCTION WITH AWS",
+      "java -jar golf.jar --displayname='My Golf App' \\\n"+
+      "        --awspublic=GKI69AJ344JLNT92X1QQ \\\n"+
+      "        --awsprivate=ke9S3CwVzLW9B21/HrkLiQfXEpoeGHwNDTlfBW5J \\\n"+
+      "        --war ./apps/demo",
+      "As in the previous example, a war file is produced instead of starting "+
+      "the local golf application server. Additionally, the golf application "+
+      "is uploaded to Amazon's s3 service, and a CloudFront distribution is "+
+      "created. The golf app in the resulting war file will automatically "+
+      "load the frontend from CloudFront, rather than from the golf server."
+    ).addExample(
+      "CREATE A HTTP PROXY",
+      "java -jar golf.jar --proxyhost=www.example.com:8080/doit/ data",
+      "This produces a HTTP proxy servlet configured to proxy HTTP requests "+
+      "to the specified remote URI, instead of starting the local embedded "+
+      "servlet container. The resulting war file will be saved to 'data.war'."
     );
 
     // default values for command line options
@@ -197,11 +237,11 @@ public class Main
     o.setOpt("devmode",       "false");
     o.setOpt("awspublic",     null);
     o.setOpt("awsprivate",    null);
-    o.setOpt("proxy",         "false");
+    o.setOpt("proxyhost",     null);
     o.setOpt("proxymaxupload",String.valueOf(10*1024*1024));
-    o.setOpt("cloudfronts",   String.valueOf(NUM_CFDOMAINS));
     o.setOpt("pool-size",     String.valueOf(NUM_VMPOOL));
     o.setOpt("pool-expire",   String.valueOf(NUM_VMEXPIRE));
+    o.setOpt("cloudfronts",   String.valueOf(NUM_CFDOMAINS));
     o.setOpt("cfdomains",     "[]");
     o.setOpt("compress-js",   "false");
     o.setOpt("compress-css",  "false");
@@ -234,13 +274,19 @@ public class Main
       System.exit(0);
     }
 
-    mApps.put(o.getOpt("appname/proxyname"), o.getOpt("approot/proxyhost"));
+    mAppName = (new File(o.getOpt("approot|proxypath")))
+                .getCanonicalFile().getName().replaceFirst("\\.war$", "");
+    mApps.put(mAppName, o.getOpt("approot|proxypath"));
 
-    while (o.getExtra().size() >= 2)
-      mBackends.put(o.getExtra().remove(0), o.getExtra().remove(0));
+    while (o.getExtra().size() > 0) {
+      String path = o.getExtra().remove(0);
+      File f = new File(path);
+      String name = f.getCanonicalFile().getName().replaceFirst("\\.war$", "");
+      mBackends.put(name, path);
+    }
 
     try {
-      if (o.getFlag("proxy"))
+      if (o.getOpt("proxyhost") != null)
         doProxyWarfile();
       else if (o.getFlag("war"))
         doWarfile();
@@ -270,8 +316,7 @@ public class Main
     mS3svc    = new RestS3Service(mAwsKeys);
 
     while (true) {
-      mBucket       = mS3svc.getOrCreateBucket(
-                        randName(o.getOpt("appname/proxyname")));
+      mBucket       = mS3svc.getOrCreateBucket(randName(mAppName));
       long nowTime  = (new Date()).getTime();
       long bktTime  = mBucket.getCreationDate().getTime();
       long oneMin   = 1L * 60L * 1000L;
@@ -299,7 +344,7 @@ public class Main
     else if (o.getOpt("displayname") != null)
       cmnt = o.getOpt("displayname");
     else
-      cmnt = o.getOpt("appname/proxyname");
+      cmnt = mAppName;
 
     JSONArray json = new JSONArray();
 
@@ -350,7 +395,7 @@ public class Main
 
       System.err.print("Uploading resource files...........");
       if (o.getOpt("awspublic") != null && o.getOpt("awsprivate") != null) {
-        cacheResourcesAws(new File(o.getOpt("approot/proxyhost")), "");
+        cacheResourcesAws(new File(o.getOpt("approot|proxypath")), "");
         System.err.println("done.");
       } else {
         System.err.println("skipped.");
@@ -362,8 +407,8 @@ public class Main
   }
 
   private void doProxyWarfile() throws Exception {
-    String name = o.getOpt("appname/proxyname");
-    String host = o.getOpt("approot/proxyhost");
+    String name = mAppName;
+    String host = o.getOpt("approot|proxypath");
     int    port = 80;
     String path = "";
 
@@ -453,12 +498,11 @@ public class Main
                       .replaceAll("__DEVMODE__",        o.getOpt("devmode"));
 
       // setup the ant build file
-      antStr =  antStr.replaceAll("__OUTFILE__", 
-                                    o.getOpt("appname/proxyname") + ".war")
+      antStr =  antStr.replaceAll("__OUTFILE__",        mAppName + ".war")
                       .replaceAll("__WEB.XML__",        web.getAbsolutePath())
                       .replaceAll("__RESOURCES.ZIP__",  res.getAbsolutePath())
                       .replaceAll("__APPROOT__",        
-                                    o.getOpt("approot/proxyhost"))
+                                    o.getOpt("approot|proxypath"))
                       .replaceAll("__DEPENDENCIES.ZIP__", dep.getAbsolutePath())
                       .replaceAll("__CLASSES.ZIP__",    cls.getAbsolutePath());
 
@@ -607,7 +651,7 @@ public class Main
 
   public static void cacheNewDotHtmlFile() throws Exception {
     String newHtmlStr = getNewDotHtmlString();
-    File f = new File(o.getOpt("approot/proxyhost"), "new.html");
+    File f = new File(o.getOpt("approot|proxypath"), "new.html");
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -617,7 +661,7 @@ public class Main
   }
 
   public static String getNewDotHtmlString() throws Exception {
-    File   cwd  = new File(o.getOpt("approot/proxyhost"));
+    File   cwd  = new File(o.getOpt("approot|proxypath"));
 
     GolfResource  newHtml       = new GolfResource(cwd, "new.html");
     GolfResource  headHtml      = new GolfResource(cwd, "head.html");
@@ -648,7 +692,7 @@ public class Main
   }
 
   public static void cacheComponentsFile() throws Exception {
-    File f = new File(o.getOpt("approot/proxyhost"), "components.js");
+    File f = new File(o.getOpt("approot|proxypath"), "components.js");
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -675,7 +719,7 @@ public class Main
     if (path == null) path = "";
     if (json == null) json = new JSONObject();
 
-    File file = new File(new File(o.getOpt("approot/proxyhost")), path);
+    File file = new File(new File(o.getOpt("approot|proxypath")), path);
       
     if (!file.getName().startsWith(".") || file.getName().equals(".")
         || file.getName().equals("..")) {
@@ -699,7 +743,7 @@ public class Main
     if (json == null) json = new JSONObject();
 
     File file = 
-      new File(new File(o.getOpt("approot/proxyhost"), "components"), path);
+      new File(new File(o.getOpt("approot|proxypath"), "components"), path);
       
     if (!file.getName().startsWith(".")) {
       if (file.isFile()) {
@@ -724,7 +768,7 @@ public class Main
     if (path == null) path = "";
     if (json == null) json = new JSONObject();
 
-    File file = new File(o.getOpt("approot/proxyhost"), path);
+    File file = new File(o.getOpt("approot|proxypath"), path);
       
     if (!file.getName().startsWith(".")) {
       if (file.isFile()) {
@@ -748,7 +792,7 @@ public class Main
   public static JSONObject processComponent(String name) throws Exception {
     name = name.replaceFirst("^/+", "");
     String className = name.replace('/', '-');
-    File   cwd       = new File(o.getOpt("approot/proxyhost"), "components");
+    File   cwd       = new File(o.getOpt("approot|proxypath"), "components");
 
     String html = name + ".html";
     String css  = name + ".css";
@@ -785,7 +829,7 @@ public class Main
     String dir = name.replaceAll("/.*$", "");
     name = name.replaceFirst("^[a-z]+/+", "");
 
-    File   cwd          = new File(o.getOpt("approot/proxyhost"), dir);
+    File   cwd          = new File(o.getOpt("approot|proxypath"), dir);
     String js           = name + ".js";
     GolfResource jsRes  = new GolfResource(cwd, js);
     String jsStr        = processComponentJs(jsRes.toString(), js);
