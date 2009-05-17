@@ -32,6 +32,9 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -130,6 +133,143 @@ public class ProxyServlet extends HttpServlet {
 		this.executeProxyRequest(getMethodProxyRequest, httpServletRequest, httpServletResponse);
 	}
 	
+	/**
+	 * Performs an HTTP DELETE request
+	 * @param httpServletRequest The {@link HttpServletRequest} object passed
+	 *                            in by the servlet engine representing the
+	 *                            client request to be proxied
+	 * @param httpServletResponse The {@link HttpServletResponse} object by which
+	 *                             we can send a proxied response to the client 
+	 */
+	public void doDelete (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+    		throws IOException, ServletException {
+		// Create a DELETE request
+		DeleteMethod delMethodProxyRequest = new DeleteMethod(this.getProxyURL(httpServletRequest));
+		// Forward the request headers
+		setProxyRequestHeaders(httpServletRequest, delMethodProxyRequest);
+    	// Execute the proxy request
+		this.executeProxyRequest(delMethodProxyRequest, httpServletRequest, httpServletResponse);
+	}
+	
+	/**
+	 * Performs an HTTP PUT request
+	 * @param httpServletRequest The {@link HttpServletRequest} object passed
+	 *                            in by the servlet engine representing the
+	 *                            client request to be proxied
+	 * @param httpServletResponse The {@link HttpServletResponse} object by which
+	 *                             we can send a proxied response to the client 
+	 */
+	public void doPut(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+        	throws IOException, ServletException {
+    	// Create a standard PUT request
+    	PutMethod putMethodProxyRequest = new PutMethod(this.getProxyURL(httpServletRequest));
+		// Forward the request headers
+		setProxyRequestHeaders(httpServletRequest, putMethodProxyRequest);
+    	// Check if this is a mulitpart (file upload) PUT
+    	if(ServletFileUpload.isMultipartContent(httpServletRequest)) {
+    		this.handleMultipartPut(putMethodProxyRequest, httpServletRequest);
+    	} else {
+    		this.handleStandardPut(putMethodProxyRequest, httpServletRequest);
+    	}
+    	// Execute the proxy request
+    	this.executeProxyRequest(putMethodProxyRequest, httpServletRequest, httpServletResponse);
+    }
+	
+	/**
+	 * Sets up the given {@link PutMethod} to send the same multipart PUT
+	 * data as was sent in the given {@link HttpServletRequest}
+	 * @param putMethodProxyRequest The {@link PutMethod} that we are
+	 *                                configuring to send a multipart PUT request
+	 * @param httpServletRequest The {@link HttpServletRequest} that contains
+	 *                            the mutlipart PUT data to be sent via the {@link PutMethod}
+	 */
+    @SuppressWarnings("unchecked")
+	private void handleMultipartPut(PutMethod putMethodProxyRequest, HttpServletRequest httpServletRequest)
+    		throws ServletException {
+    	// Create a factory for disk-based file items
+    	DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
+    	// Set factory constraints
+    	diskFileItemFactory.setSizeThreshold(this.getMaxFileUploadSize());
+    	diskFileItemFactory.setRepository(FILE_UPLOAD_TEMP_DIRECTORY);
+    	// Create a new file upload handler
+    	ServletFileUpload servletFileUpload = new ServletFileUpload(diskFileItemFactory);
+    	// Parse the request
+    	try {
+    		// Get the multipart items as a list
+    		List<FileItem> listFileItems = (List<FileItem>) servletFileUpload.parseRequest(httpServletRequest);
+    		// Create a list to hold all of the parts
+    		List<Part> listParts = new ArrayList<Part>();
+    		// Iterate the multipart items list
+    		for(FileItem fileItemCurrent : listFileItems) {
+    			// If the current item is a form field, then create a string part
+    			if (fileItemCurrent.isFormField()) {
+    				StringPart stringPart = new StringPart(
+    						fileItemCurrent.getFieldName(), // The field name
+    						fileItemCurrent.getString()     // The field value
+    				);
+    				// Add the part to the list
+    				listParts.add(stringPart);
+    			} else {
+    				// The item is a file upload, so we create a FilePart
+    				FilePart filePart = new FilePart(
+    						fileItemCurrent.getFieldName(),    // The field name
+    						new ByteArrayPartSource(
+    								fileItemCurrent.getName(), // The uploaded file name
+    								fileItemCurrent.get()      // The uploaded file contents
+    						)
+    				);
+    				// Add the part to the list
+    				listParts.add(filePart);
+    			}
+    		}
+    		MultipartRequestEntity multipartRequestEntity = new MultipartRequestEntity(
+																listParts.toArray(new Part[] {}),
+																putMethodProxyRequest.getParams()
+															);
+    		putMethodProxyRequest.setRequestEntity(multipartRequestEntity);
+    		// The current content-type header (received from the client) IS of
+    		// type "multipart/form-data", but the content-type header also
+    		// contains the chunk boundary string of the chunks. Currently, this
+    		// header is using the boundary of the client request, since we
+    		// blindly copied all headers from the client request to the proxy
+    		// request. However, we are creating a new request with a new chunk
+    		// boundary string, so it is necessary that we re-set the
+    		// content-type string to reflect the new chunk boundary string
+    		putMethodProxyRequest.setRequestHeader(STRING_CONTENT_TYPE_HEADER_NAME, multipartRequestEntity.getContentType());
+    	} catch (FileUploadException fileUploadException) {
+    		throw new ServletException(fileUploadException);
+    	}
+    }
+    
+	/**
+	 * Sets up the given {@link PutMethod} to send the same standard PUT
+	 * data as was sent in the given {@link HttpServletRequest}
+	 * @param putMethodProxyRequest The {@link PutMethod} that we are
+	 *                                configuring to send a standard PUT request
+	 * @param httpServletRequest The {@link HttpServletRequest} that contains
+	 *                            the PUT data to be sent via the {@link PutMethod}
+	 */    
+    @SuppressWarnings("unchecked")
+	private void handleStandardPut(PutMethod putMethodProxyRequest, HttpServletRequest httpServletRequest) 
+            throws IOException {
+		// Get the client PUT data as a Map
+		Map<String, String[]> mapPutParameters = (Map<String,String[]>) httpServletRequest.getParameterMap();
+		// Create a List to hold the NameValuePairs to be passed to the PutMethod
+		List<NameValuePair> listNameValuePairs = new ArrayList<NameValuePair>();
+		// Iterate the parameter names
+		for(String stringParameterName : mapPutParameters.keySet()) {
+			// Iterate the values for each parameter name
+			String[] stringArrayParameterValues = mapPutParameters.get(stringParameterName);
+			for(String stringParamterValue : stringArrayParameterValues) {
+				// Create a NameValuePair and store in list
+				NameValuePair nameValuePair = new NameValuePair(stringParameterName, stringParamterValue);
+				listNameValuePairs.add(nameValuePair);
+			}
+		}
+		// Set the proxy request PUT data 
+		putMethodProxyRequest.setRequestEntity(new InputStreamRequestEntity(httpServletRequest.getInputStream()));
+    }
+    
 	/**
 	 * Performs an HTTP POST request
 	 * @param httpServletRequest The {@link HttpServletRequest} object passed
