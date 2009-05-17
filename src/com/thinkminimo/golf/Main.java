@@ -97,7 +97,8 @@ public class Main
 
     // Command line parser setup
 
-    o     = new GetOpt("golf", argv);
+    o = new GetOpt("golf", argv);
+
     o.addFlag(
       "version", 
       "Display golf application server version info and exit."
@@ -149,15 +150,10 @@ public class Main
       "The golf application server ships with a built-in HTTP proxy servlet "+
       "that can be used to provide access to backend web services without "+
       "needing to resort to using JSONP or the 'window.name' hack."
-    ).addOpt(
-      "proxyhost",
-      "The host to proxy to (required when using the built-in HTTP proxy)."
-    ).addOpt(
-      "proxyport",
-      "The port to proxy to (optional)."
-    ).addOpt(
-      "proxypath",
-      "The context path to prepend to HTTP proxy request URIs (optional)."
+    ).addFlag(
+      "proxy",
+      "If present, build HTTP proxy servlet war file and exit, instead of "+
+      "starting the embedded servlet container."
     ).addOpt(
       "proxymaxupload",
       "The maximum file upload size for HTTP proxy requests (optional, in "+
@@ -178,14 +174,18 @@ public class Main
       "If present, create war file instead of starting embedded servlet "+
       "container."
     ).addArg(
-      "appname",
-      "The name of your app. This will be the servlet context path."
+      "appname/proxyname",
+      "The name of your app. This will be the servlet context path. When "+
+      "building HTTP proxy war file this is the local context path of the "+
+      "HTTP proxy servlet."
     ).addArg(
-      "approot",
-      "The location of the app source directory."
+      "approot/proxyhost",
+      "The location of the app source directory, or when building HTTP proxy "+
+      "war file, the remote host URI."
     ).addVarArg(
       "<backend name> <backend root>",
-      "The backend webapp context path and location of .war file or approot."
+      "The backend webapp context path and location of .war file or approot "+
+      "(not used when building HTTP proxy war files)."
     );
 
     // default values for command line options
@@ -196,9 +196,7 @@ public class Main
     o.setOpt("devmode",       "false");
     o.setOpt("awspublic",     null);
     o.setOpt("awsprivate",    null);
-    o.setOpt("proxyhost",     null);
-    o.setOpt("proxyport",     "80");
-    o.setOpt("proxypath",     null);
+    o.setOpt("proxy",         "false");
     o.setOpt("proxymaxupload",String.valueOf(10*1024*1024));
     o.setOpt("cloudfronts",   String.valueOf(NUM_CFDOMAINS));
     o.setOpt("pool-size",     String.valueOf(NUM_VMPOOL));
@@ -212,7 +210,6 @@ public class Main
     try {
       o.go();
     } catch (Exception e) {
-      e.printStackTrace();
       System.exit(1);
     }
 
@@ -236,20 +233,15 @@ public class Main
       System.exit(0);
     }
 
-    // process command lines with argv
-
-    if (o.getOpt("appname") == null || o.getOpt("approot") == null) {
-      usage("missing command line parameter");
-      System.exit(1);
-    }
-      
-    mApps.put(o.getOpt("appname"), o.getOpt("approot"));
+    mApps.put(o.getOpt("appname/proxyname"), o.getOpt("approot/proxyhost"));
 
     while (o.getExtra().size() >= 2)
       mBackends.put(o.getExtra().remove(0), o.getExtra().remove(0));
 
     try {
-      if (o.getFlag("war"))
+      if (o.getFlag("proxy"))
+        doProxyWarfile();
+      else if (o.getFlag("war"))
         doWarfile();
       else
         doServer();
@@ -277,7 +269,8 @@ public class Main
     mS3svc    = new RestS3Service(mAwsKeys);
 
     while (true) {
-      mBucket       = mS3svc.getOrCreateBucket(randName(o.getOpt("appname")));
+      mBucket       = mS3svc.getOrCreateBucket(
+                        randName(o.getOpt("appname/proxyname")));
       long nowTime  = (new Date()).getTime();
       long bktTime  = mBucket.getCreationDate().getTime();
       long oneMin   = 1L * 60L * 1000L;
@@ -305,7 +298,7 @@ public class Main
     else if (o.getOpt("displayname") != null)
       cmnt = o.getOpt("displayname");
     else
-      cmnt = o.getOpt("appname");
+      cmnt = o.getOpt("appname/proxyname");
 
     JSONArray json = new JSONArray();
 
@@ -356,7 +349,7 @@ public class Main
 
       System.err.print("Uploading resource files...........");
       if (o.getOpt("awspublic") != null && o.getOpt("awsprivate") != null) {
-        cacheResourcesAws(new File(o.getOpt("approot")), "");
+        cacheResourcesAws(new File(o.getOpt("approot/proxyhost")), "");
         System.err.println("done.");
       } else {
         System.err.println("skipped.");
@@ -367,10 +360,75 @@ public class Main
     }
   }
 
+  private void doProxyWarfile() throws Exception {
+    String name = o.getOpt("appname/proxyname");
+    String host = o.getOpt("approot/proxyhost");
+    int    port = 80;
+    String path = "";
+
+    if (!host.startsWith("http://"))
+      host = "http://"+host;
+
+    URI uri = new URI(host);
+
+    host = uri.getHost();
+    port = uri.getPort() == -1 ? port : uri.getPort();
+    path = uri.getPath() == null ? path : uri.getPath();
+
+    doProxyAnt(name, host, port, path);
+  }
+
   private void doWarfile() throws Exception {
     o.setOpt("devmode", "false");
     doAws();
     doAnt();
+  }
+
+  public void doProxyAnt(String name, String host, int port, String path)
+    throws Exception {
+    try {
+      System.err.print("Building proxy warfile.............");
+
+      File    dep     = cacheResourceFile("depends.zip",    ".zip", null);
+      File    cls     = cacheResourceFile("classes.zip",    ".zip", null);
+      File    web     = getTmpFile(".xml");
+      File    ant     = getTmpFile(".xml", new File("."));
+
+      String  webStr  = getResourceAsString("proxy_web.xml");
+      String  antStr  = getResourceAsString("proxy_project.xml");
+
+      String  dname   = "HTTP proxy servlet ("+host+":"+port+"/"+path+")";
+      String  ddesc   = "HTTP proxy servlet ("+host+":"+port+"/"+path+")";
+
+      // set init parameters in the web.xml file
+      webStr =  webStr.replaceAll("__DISPLAYNAME__",    dname)
+                      .replaceAll("__DESCRIPTION__",    ddesc)
+                      .replaceAll("__PROXY_HOST__",     host)
+                      .replaceAll("__PROXY_PORT__",     String.valueOf(port))
+                      .replaceAll("__PROXY_PATH__",     path)
+                      .replaceAll("__MAX_FILE_UPLOAD_SIZE__",
+                                    o.getOpt("proxymaxupload"));
+
+      // setup the ant build file
+      antStr =  antStr.replaceAll("__OUTFILE__",        name + ".war")
+                      .replaceAll("__WEB.XML__",        web.getAbsolutePath())
+                      .replaceAll("__DEPENDENCIES.ZIP__", dep.getAbsolutePath())
+                      .replaceAll("__CLASSES.ZIP__",    cls.getAbsolutePath());
+
+      cacheStringFile(webStr, "", web);
+      cacheStringFile(antStr, "", ant);
+
+      Project project = new Project();
+      project.init();
+      project.setUserProperty("ant.file" , ant.getAbsolutePath());
+      ProjectHelper.configureProject(project, ant);
+      project.executeTarget("war");
+
+      System.err.println("done.");
+    } catch (Exception e) {
+      System.err.println("fail.");
+      throw new Exception(e);
+    }
   }
 
   public void doAnt() throws Exception {
@@ -394,10 +452,12 @@ public class Main
                       .replaceAll("__DEVMODE__",        o.getOpt("devmode"));
 
       // setup the ant build file
-      antStr =  antStr.replaceAll("__OUTFILE__", o.getOpt("appname") + ".war")
+      antStr =  antStr.replaceAll("__OUTFILE__", 
+                                    o.getOpt("appname/proxyname") + ".war")
                       .replaceAll("__WEB.XML__",        web.getAbsolutePath())
                       .replaceAll("__RESOURCES.ZIP__",  res.getAbsolutePath())
-                      .replaceAll("__APPROOT__",        o.getOpt("approot"))
+                      .replaceAll("__APPROOT__",        
+                                    o.getOpt("approot/proxyhost"))
                       .replaceAll("__DEPENDENCIES.ZIP__", dep.getAbsolutePath())
                       .replaceAll("__CLASSES.ZIP__",    cls.getAbsolutePath());
 
@@ -546,7 +606,7 @@ public class Main
 
   public static void cacheNewDotHtmlFile() throws Exception {
     String newHtmlStr = getNewDotHtmlString();
-    File f = new File(o.getOpt("approot"), "new.html");
+    File f = new File(o.getOpt("approot/proxyhost"), "new.html");
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -556,7 +616,7 @@ public class Main
   }
 
   public static String getNewDotHtmlString() throws Exception {
-    File   cwd  = new File(o.getOpt("approot"));
+    File   cwd  = new File(o.getOpt("approot/proxyhost"));
 
     GolfResource  newHtml       = new GolfResource(cwd, "new.html");
     GolfResource  headHtml      = new GolfResource(cwd, "head.html");
@@ -587,7 +647,7 @@ public class Main
   }
 
   public static void cacheComponentsFile() throws Exception {
-    File f = new File(o.getOpt("approot"), "components.js");
+    File f = new File(o.getOpt("approot/proxyhost"), "components.js");
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -614,7 +674,7 @@ public class Main
     if (path == null) path = "";
     if (json == null) json = new JSONObject();
 
-    File file = new File(new File(o.getOpt("approot")), path);
+    File file = new File(new File(o.getOpt("approot/proxyhost")), path);
       
     if (!file.getName().startsWith(".") || file.getName().equals(".")
         || file.getName().equals("..")) {
@@ -637,7 +697,8 @@ public class Main
     if (path == null) path = "";
     if (json == null) json = new JSONObject();
 
-    File file = new File(new File(o.getOpt("approot"), "components"), path);
+    File file = 
+      new File(new File(o.getOpt("approot/proxyhost"), "components"), path);
       
     if (!file.getName().startsWith(".")) {
       if (file.isFile()) {
@@ -662,7 +723,7 @@ public class Main
     if (path == null) path = "";
     if (json == null) json = new JSONObject();
 
-    File file = new File(o.getOpt("approot"), path);
+    File file = new File(o.getOpt("approot/proxyhost"), path);
       
     if (!file.getName().startsWith(".")) {
       if (file.isFile()) {
@@ -686,7 +747,7 @@ public class Main
   public static JSONObject processComponent(String name) throws Exception {
     name = name.replaceFirst("^/+", "");
     String className = name.replace('/', '-');
-    File   cwd       = new File(o.getOpt("approot"), "components");
+    File   cwd       = new File(o.getOpt("approot/proxyhost"), "components");
 
     String html = name + ".html";
     String css  = name + ".css";
@@ -723,7 +784,7 @@ public class Main
     String dir = name.replaceAll("/.*$", "");
     name = name.replaceFirst("^[a-z]+/+", "");
 
-    File   cwd          = new File(o.getOpt("approot"), dir);
+    File   cwd          = new File(o.getOpt("approot/proxyhost"), dir);
     String js           = name + ".js";
     GolfResource jsRes  = new GolfResource(cwd, js);
     String jsStr        = processComponentJs(jsRes.toString(), js);
