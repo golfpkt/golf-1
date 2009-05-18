@@ -23,6 +23,10 @@
       <param-value>__PROXY_PATH__</param-value>
     </init-param>
     <init-param>
+      <param-name>proxyQuery</param-name>
+      <param-value>__PROXY_QUERY__</param-value>
+    </init-param>
+    <init-param>
       <param-name>maxFileUploadSize</param-name>
       <param-value>__MAX_FILE_UPLOAD_SIZE__</param-value>
     </init-param>
