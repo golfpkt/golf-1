@@ -229,8 +229,6 @@ public class GolfServlet extends HttpServlet {
 
       if (urlHash != null && urlHash.length() > 0) {
         servletURL = servletURL.replaceFirst("\\Q"+urlHash+"\\E$", "/");
-        System.err.println("~~~~~~~~~~~~~~~~~~~~"+servletURL);
-        System.err.println("~~~~~~~~~~~~~~~~~~~~"+urlHash);
       } else {
         urlHash    = "/";
       }
@@ -694,8 +692,6 @@ public class GolfServlet extends HttpServlet {
     if (isabot == null) {
       isabot = false;
       for (String i : mBotAgents) {
-        System.err.println(".....|"+uagent+"|.....");
-        System.err.println(".....|"+i+"|.....");
         if (uagent.matches(i)) {
           isabot = true;
           context.s.setJs(false);
@@ -769,7 +765,7 @@ public class GolfServlet extends HttpServlet {
       setCachable(context);
 
     PrintWriter out = context.response.getWriter();
-    out.println(html);
+    out.print(html);
     out.close();
     logResponse(context, 200);
   }
@@ -803,7 +799,7 @@ public class GolfServlet extends HttpServlet {
 
     if (res.getMimeType().startsWith("text/")) {
       PrintWriter out = context.response.getWriter();
-      out.println(res.toString());
+      out.print(res.toString());
     } else {
       OutputStream out = context.response.getOutputStream();
       out.write(res.toByteArray());
