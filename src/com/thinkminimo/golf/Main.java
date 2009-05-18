@@ -158,6 +158,11 @@ public class Main
       "produce a war file containing the configured proxy servlet and exit, "+
       "instead of starting the embedded servlet container."
     ).addOpt(
+      "proxyparams",
+      "Parameters to add to the query string of every request sent by the "+
+      "HTTP proxy to the remote host. This can be used to pass tokens that "+
+      "the client shouldn't have access to, and things like that."
+    ).addOpt(
       "proxymaxupload",
       "The maximum file upload size for HTTP proxy requests (optional, in "+
       "bytes)."
@@ -212,9 +217,9 @@ public class Main
       "production servlet container."
     ).addExample(
       "PREPARE WAR FILE FOR DEPLOYMENT TO PRODUCTION WITH AWS",
-      "java -jar golf.jar --displayname='My Golf App' \\\n"+
-      "        --awspublic=GKI69AJ344JLNT92X1QQ \\\n"+
-      "        --awsprivate=ke9S3CwVzLW9B21/HrkLiQfXEpoeGHwNDTlfBW5J \\\n"+
+      "java -jar golf.jar --displayname 'My Golf App' \\\n"+
+      "        --awspublic GKI69AJ344JLNT92X1QQ \\\n"+
+      "        --awsprivate ke9S3CwVzLW9B21/HrkLiQfXEpoeGHwNDTlfBW5J \\\n"+
       "        --war ./apps/demo",
       "As in the previous example, a war file is produced instead of starting "+
       "the local golf application server. Additionally, the golf application "+
@@ -223,7 +228,8 @@ public class Main
       "load the frontend from CloudFront, rather than from the golf server."
     ).addExample(
       "CREATE A HTTP PROXY",
-      "java -jar golf.jar --proxyhost=www.example.com:8080/doit/ data",
+      "java -jar golf.jar --proxyhost www.example.com:8080/doit/ \\\n"+
+      "        --proxyparams 'user=myname&pass=secret' data",
       "This produces a HTTP proxy servlet configured to proxy HTTP requests "+
       "to the specified remote URI, instead of starting the local embedded "+
       "servlet container. The resulting war file will be saved to 'data.war'."
@@ -406,7 +412,7 @@ public class Main
 
   private void doProxyWarfile() throws Exception {
     String name = mAppName;
-    String host = o.getOpt("approot|proxypath");
+    String host = o.getOpt("proxyhost");
     int    port = 80;
     String path = "";
 
@@ -450,6 +456,7 @@ public class Main
                       .replaceAll("__PROXY_HOST__",     host)
                       .replaceAll("__PROXY_PORT__",     String.valueOf(port))
                       .replaceAll("__PROXY_PATH__",     path)
+                      .replaceAll("__PROXY_QUERY__",    o.getOpt("proxyparams"))
                       .replaceAll("__MAX_FILE_UPLOAD_SIZE__",
                                     o.getOpt("proxymaxupload"));
 
