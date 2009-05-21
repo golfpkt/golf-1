@@ -85,6 +85,7 @@ if (serverside) {
               });
               if (a instanceof Component && a.onAppend)
                 a.onAppend();
+              return jQuery(this);
             }; 
         })(jQuery.fn[v]);
     });
