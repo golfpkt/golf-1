@@ -378,7 +378,8 @@ public class ProxyServlet extends HttpServlet {
      *                            the POST data to be sent via the {@link PostMethod}
      */    
     @SuppressWarnings("unchecked")
-    private void handleStandardPost(PostMethod postMethodProxyRequest, HttpServletRequest httpServletRequest) {
+    private void handleStandardPost(PostMethod postMethodProxyRequest, HttpServletRequest httpServletRequest) throws IOException {
+        /*
         // Get the client POST data as a Map
         Map<String, String[]> mapPostParameters = (Map<String,String[]>) httpServletRequest.getParameterMap();
         // Create a List to hold the NameValuePairs to be passed to the PostMethod
@@ -395,6 +396,8 @@ public class ProxyServlet extends HttpServlet {
         }
         // Set the proxy request POST data 
         postMethodProxyRequest.setRequestBody(listNameValuePairs.toArray(new NameValuePair[] { }));
+        */
+        postMethodProxyRequest.setRequestEntity(new InputStreamRequestEntity(httpServletRequest.getInputStream()));
     }
     
     /**
