@@ -244,6 +244,7 @@ public class Main
     o.setOpt("awspublic",     null);
     o.setOpt("awsprivate",    null);
     o.setOpt("proxyhost",     null);
+    o.setOpt("proxyparams",   "");
     o.setOpt("proxymaxupload",String.valueOf(10*1024*1024));
     o.setOpt("pool-size",     String.valueOf(NUM_VMPOOL));
     o.setOpt("pool-expire",   String.valueOf(NUM_VMEXPIRE));
