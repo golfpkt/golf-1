@@ -212,10 +212,11 @@ jQuery.golf = {
 
     for (name in jQuery.golf.components) {
       cmp = jQuery.golf.components[name];
-      if (cmp.css) {
+      if (jQuery("head style[title='"+name+"']").size() == 0) {
         // add css to <head>
         if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
-          jQuery("head").append("<style type='text/css'>"+cmp.css+"</style>");
+          jQuery("head").append(
+              "<style type='text/css' title='"+name+"'>"+cmp.css+"</style>");
         cmp.css = false;
       }
 
