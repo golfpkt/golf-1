@@ -228,7 +228,8 @@ public class GolfServlet extends HttpServlet {
       if (! this.servletURL.endsWith("/")) this.servletURL += "/";
 
       if (urlHash != null && urlHash.length() > 0) {
-        servletURL = servletURL.replaceFirst("\\Q"+urlHash+"\\E$", "/");
+        urlHash    = urlHash.replaceFirst("^//", "/");
+        servletURL = servletURL.replaceFirst("\\Q"+urlHash+"\\E$", "");
       } else {
         urlHash    = "/";
       }
@@ -719,8 +720,7 @@ public class GolfServlet extends HttpServlet {
             context.s.setJs(js);
 
             if (js) {
-              String hash = context.urlHash.replaceFirst("^/+", "/");
-              uri = context.servletURL + "#" + hash;
+              uri = context.servletURL + "#" + context.urlHash;
             } else {
               uri = context.request.getRequestURI();
             }
