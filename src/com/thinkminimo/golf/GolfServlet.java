@@ -26,21 +26,23 @@ import com.gargoylesoftware.htmlunit.javascript.*;
  */
 public class GolfServlet extends HttpServlet {
   
-  public static final int     LOG_ALL             = 0;
-  public static final int     LOG_TRACE           = 1;
-  public static final int     LOG_DEBUG           = 2;
-  public static final int     LOG_INFO            = 3;
-  public static final int     LOG_WARN            = 4;
-  public static final int     LOG_ERROR           = 5;
-  public static final int     LOG_FATAL           = 6;
-  public static final int     LOG_NONE            = 999;
+  public static final int     LOG_ALL                 = 0;
+  public static final int     LOG_TRACE               = 1;
+  public static final int     LOG_DEBUG               = 2;
+  public static final int     LOG_INFO                = 3;
+  public static final int     LOG_WARN                = 4;
+  public static final int     LOG_ERROR               = 5;
+  public static final int     LOG_FATAL               = 6;
+  public static final int     LOG_NONE                = 999;
 
-  public static final int     JSVM_TIMEOUT        = 10000;
+  public static final int     JSVM_TIMEOUT            = 10000;
 
-  public static final String  FILE_NEW_HTML       = "new.html";
-  public static final String  FILE_JSDETECT_HTML  = "jsdetect.html";
-  public static final String  FILE_COMPONENTS_JS  = "components.js";
-  public static final String  FILE_IMABOT_TXT     = ".imabot.txt";
+  public static final String  FILE_NEW_HTML           = "new.html";
+  public static final String  FILE_NEW_FC_HTML        = "new.fc.html";
+  public static final String  FILE_JSDETECT_HTML      = "jsdetect.html";
+  public static final String  FILE_COMPONENTS_JS      = "components.js";
+  public static final String  FILE_FORCEPROXY_TXT     = "forceproxy.txt";
+  public static final String  FILE_FORCECLIENT_TXT    = "forceclient.txt";
 
   private class StoredJSVM {
     public WebClient client;
@@ -121,11 +123,21 @@ public class GolfServlet extends HttpServlet {
       set("lasttarget", value);
     }
 
-    public Boolean isABot() {
-      return get("isabot") == null ? null : Boolean.parseBoolean(get("isabot"));
+    public Boolean getForceClient() {
+      return get("forceclient") == null 
+                ? null 
+                : Boolean.parseBoolean(get("forceclient"));
     }
-    public void setIsABot(Boolean value) {
-      set("isabot", String.valueOf(value));
+    public void setForceClient(Boolean value) {
+      set("forceclient", String.valueOf(value));
+    }
+    public Boolean getForceProxy() {
+      return get("forceproxy") == null 
+                ? null 
+                : Boolean.parseBoolean(get("forceproxy"));
+    }
+    public void setForceProxy(Boolean value) {
+      set("forceproxy", String.valueOf(value));
     }
   }
 
@@ -272,13 +284,15 @@ public class GolfServlet extends HttpServlet {
 
   private static int                  mLogLevel     = LOG_ALL;
   private static String               mNewHtml      = null;
+  private static String               mNewHtmlFc    = null;
   private static String               mJsDetect     = null;
   private static String               mComponents   = null;
   private static String               mDevMode      = null;
   private static String               mPoolSize     = null;
   private static String               mPoolExpire   = null;
   private static AtomicBoolean        mBotMutex     = new AtomicBoolean();
-  private static ArrayList<String>    mBotAgents    = new ArrayList<String>();
+  private static ArrayList<String>    mForceProxy   = new ArrayList<String>();
+  private static ArrayList<String>    mForceClient  = new ArrayList<String>();
 
   /**
    * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
@@ -380,6 +394,8 @@ public class GolfServlet extends HttpServlet {
       }
       mNewHtml  =
         (new GolfResource(getServletContext(), FILE_NEW_HTML)).toString();
+      mNewHtmlFc  =
+        (new GolfResource(getServletContext(), FILE_NEW_FC_HTML)).toString();
       mJsDetect = 
         (new GolfResource(getServletContext(), FILE_JSDETECT_HTML)).toString();
       mComponents =
@@ -389,14 +405,13 @@ public class GolfServlet extends HttpServlet {
         // wait for resource to be available
         while (!mBotMutex.compareAndSet(false, true));
 
-        String imabot =
-          (new GolfResource(getServletContext(), FILE_IMABOT_TXT))
-            .toString();
+        mForceProxy =
+          (new GolfResource(getServletContext(), FILE_FORCEPROXY_TXT))
+            .toArrayList();
 
-        mBotAgents.clear();
-
-        for (String i : imabot.split("\n"))
-          mBotAgents.add(i);
+        mForceClient =
+          (new GolfResource(getServletContext(), FILE_FORCECLIENT_TXT))
+            .toArrayList();
 
       } catch (FileNotFoundException fx) {
       } finally {
@@ -680,7 +695,7 @@ public class GolfServlet extends HttpServlet {
    */
   private void doNoProxy(GolfContext context) throws Exception {
     // the blank skeleton html template
-    String html = mNewHtml;
+    String html = (context.s.getForceClient() ? mNewHtmlFc : mNewHtml);
     sendResponse(context, preprocess(html, context, false), "text/html", true);
   }
 
@@ -719,40 +734,64 @@ public class GolfServlet extends HttpServlet {
     HttpSession session     = context.request.getSession();
     String      remoteAddr  = context.request.getRemoteAddr();
     String      sessionAddr = context.s.getIpAddr();
-    Boolean     isabot      = context.s.isABot();
+    Boolean     forceproxy  = context.s.getForceProxy();
+    Boolean     forceclient = context.s.getForceClient();
+    Boolean     forceParam  = context.p.getForce();
+    Boolean     jsParam     = context.p.getJs();
     String      sid         = session.getId();
     String      uagent      = context.request.getHeader("User-Agent");
 
     if (sid == null)
       throw new Exception("sid is null");
 
-    // FIXME: store this info in session unless in devmode
-    if (isabot == null) {
-      isabot = false;
-      for (String i : mBotAgents) {
-        if (uagent.matches(i)) {
-          isabot = true;
-          context.s.setJs(false);
+    if (Boolean.parseBoolean(mDevMode)) {
+      context.s.setForceProxy(forceproxy = null);
+      context.s.setForceClient(forceclient = null);
+    }
+
+    // forceproxy: Match regex to user agent string.
+    // If match, force proxy mode immediately.
+
+    // FIXME: store this info in session unless in devmode, maybe
+    if (forceproxy == null) {
+      if (forceproxy = multipatternMatch(uagent, mForceProxy)) {
+        context.s.setJs(false);
+        context.s.setSeq(1);
+      }
+      context.s.setForceProxy(forceproxy);
+    }
+
+    // forceclient: Match regex to user agent string.
+    // If match, force client mode immediately.
+    // This is overridden by forceproxy, though.
+
+    // FIXME: store this info in session unless in devmode, maybe
+    if (forceclient == null) {
+      forceclient = false;
+      if (forceproxy == false) {
+        if (forceclient = multipatternMatch(uagent, mForceClient)) {
+          context.s.setJs(true);
           context.s.setSeq(1);
         }
       }
-      if (!Boolean.parseBoolean(mDevMode))
-        context.s.setIsABot(isabot);
+      context.s.setForceClient(forceclient);
     }
 
-    if (! session.isNew() || isabot) {
-      if (context.p.getForce() != null && context.p.getForce().booleanValue())
+    Boolean forceUa = forceproxy || forceclient;
+
+    if (! session.isNew() || forceUa) {
+      if (!forceUa && forceParam != null && forceParam.booleanValue())
         context.s.setSeq(0);
 
       int seq = (context.s.getSeq() == null ? 0 : (int) context.s.getSeq());
       
       context.s.setSeq(++seq);
 
-      if (isabot || sessionAddr != null && sessionAddr.equals(remoteAddr)) {
-        if (!isabot && seq == 1) {
-          if (context.p.getJs() != null) {
+      if (forceUa || sessionAddr != null && sessionAddr.equals(remoteAddr)) {
+        if (!forceUa && seq == 1) {
+          if (jsParam != null) {
             String uri;
-            boolean js = context.p.getJs().booleanValue();
+            boolean js = jsParam.booleanValue();
 
             context.s.setJs(js);
 
@@ -767,10 +806,11 @@ public class GolfServlet extends HttpServlet {
             throw new RedirectException(
                 context.response.encodeRedirectURL(uri));
           }
-        } else if (seq >= 2 || isabot) {
-          if (context.s.getJs() != null || isabot) {
+        } else if (forceUa || seq >= 2) {
+          if (forceUa || context.s.getJs() != null) {
             // FIXME: lurking NPE if you change this
-            if (!isabot && context.s.getJs().booleanValue())
+            if (forceclient ||
+                (!forceproxy && context.s.getJs().booleanValue()))
               doNoProxy(context);
             else
               doProxy(context);
@@ -794,6 +834,13 @@ public class GolfServlet extends HttpServlet {
       jsDetect.replaceAll("__DONT_HAVE_JS__", ";jsessionid="+sid+"?js=false");
 
     sendResponse(context, jsDetect, "text/html", false);
+  }
+
+  private boolean multipatternMatch(String ua, ArrayList<String> pats) {
+    for (String i : pats)
+      if (ua.matches(i))
+        return true;
+    return false;
   }
 
   private void sendResponse(GolfContext context, String html, 
