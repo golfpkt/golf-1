@@ -556,4 +556,27 @@ public class GolfResource {
   public byte[] toByteArray() {
     return mBuffer.toByteArray();
   }
+
+  /**
+   * Converts contents of the file to an arraylist, split on "\n".
+   *
+   * @return the arraylist
+   */
+  public ArrayList<String> toArrayList() {
+    return toArrayList("\n");
+  }
+
+  /**
+   * Converts contents of the file to an arraylist, split on some string.
+   *
+   * @param c the string on which to split contents
+   * @return the arraylist
+   */
+  public ArrayList<String> toArrayList(String c) {
+    String contents         = toString();
+    ArrayList<String> ret   = new ArrayList<String>();
+    for (String s : contents.split(c))
+      ret.add(s);
+    return ret;
+  }
 }
