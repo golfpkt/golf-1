@@ -366,7 +366,7 @@ public class Main
   
   private void doAws() throws Exception {
     try {
-      System.err.print("Preparing S3 bucket................");
+      System.err.print("Preparing S3 bucket....................");
       if (o.getOpt("awspublic") != null && o.getOpt("awsprivate") != null) {
         prepareAws();
         System.err.println("done.");
@@ -382,15 +382,15 @@ public class Main
         System.err.println("skipped.");
       }
 
-      System.err.print("Compiling components...............");
+      System.err.print("Compiling components...................");
       cacheComponentsFile();
       System.err.println("done.");
 
-      System.err.print("Creating new.html template file....");
+      System.err.print("Creating new.html template file........");
       cacheNewDotHtmlFile();
       System.err.println("done.");
 
-      System.err.print("Uploading jar resources............");
+      System.err.print("Uploading jar resources................");
       if (o.getOpt("awspublic") != null && o.getOpt("awsprivate") != null) {
         cacheJarResourcesAws();
         System.err.println("done.");
@@ -398,7 +398,7 @@ public class Main
         System.err.println("skipped.");
       }
 
-      System.err.print("Uploading resource files...........");
+      System.err.print("Uploading resource files...............");
       if (o.getOpt("awspublic") != null && o.getOpt("awsprivate") != null) {
         cacheResourcesAws(new File(o.getOpt("approot|proxypath")), "");
         System.err.println("done.");
@@ -438,7 +438,7 @@ public class Main
   public void doProxyAnt(String name, String host, int port, String path)
     throws Exception {
     try {
-      System.err.print("Building proxy warfile.............");
+      System.err.print("Building proxy warfile.................");
 
       File    dep     = cacheResourceFile("depends.zip",    ".zip", null);
       File    cls     = cacheResourceFile("classes.zip",    ".zip", null);
@@ -485,7 +485,7 @@ public class Main
 
   public void doAnt() throws Exception {
     try {
-      System.err.print("Building warfile...................");
+      System.err.print("Building warfile...........................");
 
       File    dep     = cacheResourceFile("depends.zip",    ".zip", null);
       File    res     = cacheResourceFile("resources.zip",  ".zip", null);
@@ -656,7 +656,7 @@ public class Main
   }
 
   public static void cacheNewDotHtmlFile() throws Exception {
-    String newHtmlStr = getNewDotHtmlString();
+    String newHtmlStr = getNewDotHtmlString(false);
     File f = new File(o.getOpt("approot|proxypath"), "new.html");
     if (f.exists())
       f.delete();
@@ -664,14 +664,24 @@ public class Main
     PrintWriter out = new PrintWriter(new FileWriter(f));
     out.print(newHtmlStr);
     out.close();
+
+    newHtmlStr = getNewDotHtmlString(true);
+    f = new File(o.getOpt("approot|proxypath"), "new.fc.html");
+    if (f.exists())
+      f.delete();
+    f.deleteOnExit();
+    out = new PrintWriter(new FileWriter(f));
+    out.print(newHtmlStr);
+    out.close();
   }
 
-  public static String getNewDotHtmlString() throws Exception {
+  public static String getNewDotHtmlString(boolean fc) throws Exception {
     File   cwd  = new File(o.getOpt("approot|proxypath"));
 
     GolfResource  newHtml       = new GolfResource(cwd, "new.html");
     GolfResource  headHtml      = new GolfResource(cwd, "head.html");
-    GolfResource  noscriptHtml  = new GolfResource(cwd, "noscript.html");
+    GolfResource  noscriptHtml  = 
+      new GolfResource(cwd, (fc?"noscript.forceclient.html":"noscript.html"));
 
     if (mNewHtml == null)
       mNewHtml = newHtml.toString();
@@ -1056,7 +1066,7 @@ public class Main
 
     handlers.addHandler(contexts);
     handlers.addHandler(new DefaultHandler());
-    handlers.addHandler(new RequestLogHandler());
+    //handlers.addHandler(new RequestLogHandler());
 
     server.setHandler(handlers);
     server.setStopAtShutdown(true);
