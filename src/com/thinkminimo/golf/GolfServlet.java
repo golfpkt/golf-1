@@ -39,6 +39,7 @@ public class GolfServlet extends HttpServlet {
 
   public static final String  FILE_NEW_HTML           = "new.html";
   public static final String  FILE_NEW_FC_HTML        = "new.fc.html";
+  public static final String  FILE_ERROR_HTML         = "error.html";
   public static final String  FILE_JSDETECT_HTML      = "jsdetect.html";
   public static final String  FILE_COMPONENTS_JS      = "components.js";
   public static final String  FILE_FORCEPROXY_TXT     = "forceproxy.txt";
@@ -285,6 +286,7 @@ public class GolfServlet extends HttpServlet {
   private static int                  mLogLevel     = LOG_ALL;
   private static String               mNewHtml      = null;
   private static String               mNewHtmlFc    = null;
+  private static String               mErrorPage    = null;
   private static String               mJsDetect     = null;
   private static String               mComponents   = null;
   private static String               mDevMode      = null;
@@ -396,6 +398,8 @@ public class GolfServlet extends HttpServlet {
         (new GolfResource(getServletContext(), FILE_NEW_HTML)).toString();
       mNewHtmlFc  =
         (new GolfResource(getServletContext(), FILE_NEW_FC_HTML)).toString();
+      mErrorPage =
+        (new GolfResource(getServletContext(), FILE_ERROR_HTML)).toString();
       mJsDetect = 
         (new GolfResource(getServletContext(), FILE_JSDETECT_HTML)).toString();
       mComponents =
@@ -504,21 +508,13 @@ public class GolfServlet extends HttpServlet {
     try {
       PrintWriter out = context.response.getWriter();
 
+      String errHtml = 
+        mErrorPage.replaceAll("<%error%>", HTMLEntityEncode(e.getMessage()));
+
       context.response.setStatus(status);
       context.response.setContentType("text/html");
 
-      out.println("<html><head><title>Golf Error</title></head><body>");
-      out.println("<table height='100%' width='100%'>");
-      out.println("<tr><td valign='middle' align='center'>");
-      out.println("<table width='600px'>");
-      out.println("<tr><td style='color:darkred;border:1px dashed red;" +
-                  "background:#fee;padding:0.5em;font-family:monospace'>");
-      out.println("<b>Golf error:</b> " + HTMLEntityEncode(e.getMessage()));
-      out.println("</td></tr>");
-      out.println("</table>");
-      out.println("</td></tr>");
-      out.println("</table>");
-      out.println("</body></html>");
+      out.print(errHtml);
     } catch (Exception x) {
       x.printStackTrace();
     }
