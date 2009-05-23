@@ -25,14 +25,36 @@ if (serverside) {
             lastId+"&amp;event=onclick'></a>";
           jself.wrap(a);
         } else if (name == "submit") {
-          ++lastId;
-          jself.attr("golfid", lastId);
-          jself.append("<input type='hidden' name='event' value='onsubmit'/>");
-          jself.append("<input type='hidden' name='target' value='"+lastId+"'/>");
+          if (!jself.attr("golfid")) {
+            ++lastId;
+            jself.attr("golfid", lastId);
+            jself.append(
+              "<input type='hidden' name='event' value='onsubmit'/>");
+            jself.append(
+              "<input type='hidden' name='target' value='"+lastId+"'/>");
+            if (!jQuery.golf.events[lastId])
+              jQuery.golf.events[lastId] = [];
+          }
+          jQuery.golf.events[jself.attr("golfid")].push(fn);
         }
         return bind.call(jQuery(this), name, fn);
       };
     })(jQuery.fn.bind);
+
+    jQuery.fn.trigger = (function(trigger) {
+      return function(type, data) {
+        var jself = jQuery(this);
+        // FIXME: this is here because hunit stops firing js submit events
+        if (type == "submit") {
+          var tmp = jQuery.golf.events[jself.attr("golfid")];
+          return jQuery.each(tmp, function(){
+            this.call(jself, type, data);
+          });
+        } else {
+          return trigger.call(jQuery(this), type, data);
+        }
+      };
+    })(jQuery.fn.trigger);
 
     jQuery.ajax = (function(ajax) {
         return function(options) {
@@ -145,9 +167,11 @@ jQuery.require = function(plugin) {
 
 jQuery.golf = {
 
-  defaultRoute: "home",
+  defaultRoute: "/home/",
   
   onRouteError: undefined,
+
+  events: [],
 
   htmlEncode: function(text) {
     return text.replace(/&/g,   "&amp;")
@@ -286,7 +310,7 @@ jQuery.golf = {
 
   route: function(hash, b) {
     var theName, theAction, i, x, pat, match;
-    if (!hash) 
+    if (!hash)
       hash = String(jQuery.golf.defaultRoute+"/").replace(/\/+$/, "/");
 
     theName         = hash;
