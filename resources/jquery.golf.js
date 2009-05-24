@@ -152,6 +152,10 @@ jQuery.golf = {
 
   events: [],
 
+  location: function(hash) {
+    $.address.value(hash);
+  },
+
   htmlEncode: function(text) {
     return text.replace(/&/g,   "&amp;")
                .replace(/</g,   "&lt;")
@@ -277,7 +281,7 @@ jQuery.golf = {
     var lastHash = "";
     return function(hash, b) {
       if (hash == "/") {
-        jQuery.address.value(String(jQuery.golf.defaultRoute));
+        jQuery.golf.location(String(jQuery.golf.defaultRoute));
         return;
       }
 
@@ -285,8 +289,8 @@ jQuery.golf = {
         lastHash = hash;
         hash = hash.replace(/^\/+/, "/");
         jQuery.golf.route(hash, b);
-        jQuery.golf.location = String(hash+"/").replace(/\/+$/, "/");
-        window.location.hash = "#"+jQuery.golf.location;
+        jQuery.golf.location.hash = String(hash+"/").replace(/\/+$/, "/");
+        window.location.hash = "#"+jQuery.golf.location.hash;
       }
     };
   })(),
