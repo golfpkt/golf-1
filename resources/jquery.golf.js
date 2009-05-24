@@ -107,8 +107,12 @@ if (serverside) {
               if (cloudfrontDomain.length)
                 uri = cloudfrontDomain[0]+uri.queryKey.path;
             } else if (uri1.anchor) {
-              if (serverside)
-                uri = servletUrl + uri1.anchor;
+              uri = servletUrl + uri1.anchor;
+              if (!serverside)
+                jQuery(this).click(function() {
+                  jQuery.golf.location(uri1.anchor);
+                  return false;
+                });
             }
           }
           this.attr("href", uri);
