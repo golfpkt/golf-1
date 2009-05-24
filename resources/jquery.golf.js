@@ -63,27 +63,6 @@ if (serverside) {
         };
     })(jQuery.ajax);
 
-    /*
-    var fns = { 
-      show:["fadeIn", "slideDown"],
-      hide:["slideUp", "fadeOut"],
-      toggle: ["slideToggle"]
-    };
-
-    for (var proxyreplace in fns) {
-      var clientfns = fns[proxyreplace];
-      for (var clientfn in clientfns) {
-        jQuery.fn[clientfn] = (function(clientfn) {
-          return function() {
-            if (!serverside)
-              return clientfn(arguments);
-            else
-              return this[proxyreplace]();
-          };
-        })(jQuery.fn[clientfn]);
-      }
-    }
-    */
   })();
 }
 
@@ -234,15 +213,16 @@ jQuery.golf = {
   setupComponents: function() {
     var cmp, name, i, m, pkg, scripts=[];
 
+    for (name in jQuery.golf.styles)
+      jQuery("head").append(
+        "<style type='text/css'>"+jQuery.golf.styles[name].css+"</style>");
+
     for (name in jQuery.golf.components) {
       cmp = jQuery.golf.components[name];
-      if (jQuery("head style[title='"+name+"']").size() == 0) {
-        // add css to <head>
-        if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
-          jQuery("head").append(
-              "<style type='text/css' title='"+name+"'>"+cmp.css+"</style>");
-        cmp.css = false;
-      }
+      // add css to <head>
+      if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
+        jQuery("head").append(
+            "<style type='text/css'>"+cmp.css+"</style>");
 
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
         throw "bad component name: '"+name+"'";
@@ -268,6 +248,9 @@ jQuery.golf = {
 
     for (i=0, m=scripts.length; i<m; i++)
       jQuery.globalEval(jQuery.golf.scripts[scripts[i]].js);
+
+    // FIXME: hunit weirdness workaround
+    jQuery.golf.setupComponents = function() {};
   },
 
   doCall: function(obj, $, argv, js) {
