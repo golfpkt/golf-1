@@ -460,7 +460,7 @@ public class GolfServlet extends HttpServlet {
     // remove the golfid attribute as it's not necessary on the client
     // and it is frowned upon by the w3c validator
     if (!server)
-      page = page.replaceAll("(<[^>]+) golfid=['\"][0-9]+['\"]", "$1");
+      page = page.replaceAll("(<[^>]+) golfid=\"[0-9]+\"", "$1");
 
     if (! context.s.getJs().booleanValue() && !server) {
       // proxy mode: remove javascript/noscript except for serverside

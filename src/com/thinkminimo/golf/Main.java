@@ -727,6 +727,7 @@ public class Main
            "jQuery.golf.models=" + getScriptsJSON("models", null) + ";" +
            "jQuery.golf.plugins=" + getScriptsJSON("plugins", null) + ";" +
            "jQuery.golf.scripts=" + getScriptsJSON("scripts", null) + ";" +
+           "jQuery.golf.styles=" + getStylesJSON("styles", null) + ";" +
            "jQuery.golf.setupComponents();";
   }
 
@@ -805,6 +806,32 @@ public class Main
     return json.toString();
   }
 
+  private static String getStylesJSON(String path, JSONObject json) 
+      throws Exception {
+    if (path == null) path = "";
+    if (json == null) json = new JSONObject();
+
+    File file = new File(o.getOpt("approot|proxypath"), path);
+      
+    if (!file.getName().startsWith(".")) {
+      if (file.isFile()) {
+        if (path.endsWith(".css")) {
+          String cmpName = path.replaceFirst("\\.css$", "");
+          String keyName = 
+            cmpName.replaceFirst("^[a-z]+/+", "").replace("/", ".");
+          json.put(keyName, processStyle(cmpName).put("name", keyName));
+        }
+      } else if (file.isDirectory()) {
+        for (String f : file.list()) {
+          String ppath = path + "/" + f;
+          getStylesJSON(path+"/"+f, json);
+        }
+      }
+    }
+
+    return json.toString();
+  }
+
   public static JSONObject processComponent(String name) throws Exception {
     name = name.replaceFirst("^/+", "");
     String className = name.replace('/', '-');
@@ -850,6 +877,18 @@ public class Main
     GolfResource jsRes  = new GolfResource(cwd, js);
     String jsStr        = processComponentJs(jsRes.toString(), js);
     JSONObject json     = new JSONObject().put("js",    jsStr);
+
+    return json;
+  }
+
+  public static JSONObject processStyle(String name) throws Exception {
+    String dir = name.replaceAll("/.*$", "");
+    name = name.replaceFirst("^[a-z]+/+", "");
+
+    File   cwd          = new File(o.getOpt("approot|proxypath"), dir);
+    String css          = (new GolfResource(cwd, name+".css")).toString()
+                            .replaceAll(" *\n *", " ");
+    JSONObject json     = new JSONObject().put("css", css);
 
     return json;
   }
