@@ -11,6 +11,7 @@
 
   return function() {
     this.setPath = function(path) {
+      path = path.replace(/^\/+/, "");
       if (!!cache[path])
         doit(path);
       else
