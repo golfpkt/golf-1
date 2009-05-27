@@ -6,7 +6,7 @@
   function doit(path) {
     $(".content").hide();
     $(".content").empty().append(cache[path]);
-    $(".content").fadeIn();
+    $(".content").show().fadeTo(2000, 0.5);
   };
 
   return function() {
