@@ -6,12 +6,40 @@ function Component() {
 function Model() {
 }
 
-function Data() {
-}
-
-// install override on the jQ bind method to inject proxy links and golfIDs
-
 if (serverside) {
+
+  jQuery.fx.off = true;
+
+  jQuery.fn.fadeIn = jQuery.fn.slideDown = function(speed, callback) {
+    return jQuery.fn.show.call(this, 0, callback);
+  };
+
+  jQuery.fn.fadeOut = jQuery.fn.slideUp = function(speed, callback) {
+    return jQuery.fn.hide.call(this, 0, callback);
+  };
+
+  //(function(fadeTo) {
+  //  jQuery.fn.fadeTo = function(speed, opacity, callback) {
+  //    return fadeTo.call(this, 0, opacity, callback);
+  //  };
+  //})(jQuery.fn.fadeTo);
+
+  jQuery.fn.slideToggle = function(speed, callback) {
+    return jQuery.fn.toggle.call(this, 0, callback);
+  };
+
+  (function(show) {
+    jQuery.fn.show = function(speed, callback) {
+      return show.call(this, 0, callback);
+    };
+  })(jQuery.fn.show);
+
+  (function(hide) {
+    jQuery.fn.hide = function(speed, callback) {
+      return hide.call(this, 0, callback);
+    };
+  })(jQuery.fn.hide);
+
   (function() {
     jQuery.fn.bind = (function(bind) {
       var lastId = 0;
@@ -66,7 +94,7 @@ if (serverside) {
   })();
 }
 
-// install overrides on jQ DOM manipulation methods to incorporate components
+// install overrides on jQ DOM manipulation methods to accomodate components
 
 (function() {
     jQuery.each([
@@ -107,8 +135,9 @@ if (serverside) {
               if (cloudfrontDomain.length)
                 uri = cloudfrontDomain[0]+uri.queryKey.path;
             } else if (uri1.anchor) {
-              uri = servletUrl + uri1.anchor;
-              if (!serverside)
+              if (serverside)
+                uri = servletUrl + uri1.anchor;
+              else
                 jQuery(this).click(function() {
                   jQuery.golf.location(uri1.anchor);
                   return false;
@@ -292,9 +321,9 @@ jQuery.golf = {
       if (hash && hash != lastHash) {
         lastHash = hash;
         hash = hash.replace(/^\/+/, "/");
-        jQuery.golf.route(hash, b);
         jQuery.golf.location.hash = String(hash+"/").replace(/\/+$/, "/");
         window.location.hash = "#"+jQuery.golf.location.hash;
+        jQuery.golf.route(hash, b);
       }
     };
   })(),
@@ -311,12 +340,13 @@ jQuery.golf = {
     //b.empty();
 
     for (i in jQuery.golf.controller) {
-      pat   = new RegExp(i);
+
+      pat   = new RegExp(jQuery.golf.controller[i].route);
       match = theName.match(pat);
 
       if (match) {
-        theAction = jQuery.golf.controller[i];
-        if (theAction(b, match)==false)
+        theAction = jQuery.golf.controller[i].action;
+        if (theAction(b, match)===false)
           break;
         theAction = null;
       }
