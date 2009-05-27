@@ -6,3 +6,7 @@ docs/api
 *.swo
 *.war
 *~
+docs/golf/components.js
+docs/golf/forceproxy.txt
+docs/golf/new.fc.html
+docs/golf/new.html
