@@ -18,6 +18,8 @@ if (serverside) {
     return jQuery.fn.hide.call(this, 0, callback);
   };
 
+  // this is problematic because the js css manipulations are not carried
+  // over in proxy mode; needs to be in a style tag maybe
   //(function(fadeTo) {
   //  jQuery.fn.fadeTo = function(speed, opacity, callback) {
   //    return fadeTo.call(this, 0, opacity, callback);
