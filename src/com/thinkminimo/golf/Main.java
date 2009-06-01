@@ -799,7 +799,7 @@ public class Main
           String keyName = cmpName.replaceFirst("^/+", "").replace("/", ".");
           json.put(keyName, processComponent(cmpName).put("name", keyName));
         }
-      } else if (file.isDirectory()) {
+      } else if (file.isDirectory() && !file.getName().endsWith(".res")) {
         for (String f : file.list()) {
           String ppath = path + "/" + f;
           getComponentsJSON(path+"/"+f, json);
