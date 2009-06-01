@@ -722,6 +722,7 @@ public class Main
   }
 
   private static String getComponentsString() throws Exception {
+    System.err.println("----\n\n"+getResourcesJSON(null, null)+"\n\n----");
     return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
            "jQuery.golf.models=" + getScriptsJSON("models", null) + ";" +
@@ -733,8 +734,13 @@ public class Main
 
   private static String getResourcesJSON(String path, JSONObject json) 
       throws Exception {
+    boolean isNew = false;
+
     if (path == null) path = "";
-    if (json == null) json = new JSONObject();
+    if (json == null) {
+      json = new JSONObject();
+      isNew = true;
+    }
 
     File file = new File(new File(o.getOpt("approot|proxypath")), path);
       
@@ -742,14 +748,38 @@ public class Main
         || file.getName().equals("..")) {
       if (file.isFile()) {
         String keyName = path.replaceFirst("^/+", "");
-        json.put(keyName, "?path=" + keyName);
+        json.put(keyName.replaceFirst("^.*/", ""), "?path=" + keyName);
       } else if (file.isDirectory()) {
+        JSONObject dir;
+        if (!isNew) {
+          dir = new JSONObject();
+          json.put(file.getName(), dir);
+        } else {
+          dir = json;
+        }
         for (String f : file.list()) {
           String ppath = path + "/" + f;
-          getResourcesJSON(path+"/"+f, json);
+          getResourcesJSON(path+"/"+f, dir);
         }
       }
     }
+
+    // these are system files that are of no use to a golf app
+    for (String s : new String[] {
+      "components",
+      "scripts",
+      "styles",
+      "error.html",
+      "head.html",
+      "new.html",
+      "new.fc.html",
+      "noscript.forceclient.html",
+      "noscript.html",
+      "forceproxy.txt",
+      "forceclient.txt",
+      "components.js",
+      "controller.js"
+    }) json.remove(s);
 
     return json.toString();
   }
@@ -902,19 +932,31 @@ public class Main
 
   public static JSONObject processComponentRes(File f, File uriBase, 
       File refBase, JSONObject res) throws URISyntaxException, JSONException {
+    boolean isNew = false;
+
     if (!f.exists() || f.getName().startsWith("."))
       return null;
 
-    if (res == null)
+    if (res == null) {
       res = new JSONObject();
+      isNew = true;
+    }
+
+    String ref = getRelativePath(f, refBase);
 
     if (f.isDirectory()) {
+      JSONObject dir;
+      if (!isNew) {
+        dir = new JSONObject();
+        res.put(ref.replaceFirst("/+$", ""), dir);
+      } else {
+        dir = res;
+      }
       for (String s : f.list())
-        processComponentRes(new File(f, s), uriBase, refBase, res);
+        processComponentRes(new File(f, s), uriBase, refBase, dir);
     } else {
       String rel = getRelativePath(f, uriBase);
-      String ref = getRelativePath(f, refBase);
-      res.put(ref, "?path=components/"+rel);
+      res.put(ref.replaceFirst("^.*/", ""), "?path=components/"+rel);
     }
     return res;
   }
