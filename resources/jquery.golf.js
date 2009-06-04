@@ -6,7 +6,7 @@ function Component() {
 function Model() {
 }
 
-function Plugin() {
+function Module() {
 }
 
 function Debug(prefix) {
@@ -200,11 +200,12 @@ jQuery.Import = function(name) {
   return ret;
 };
 
-jQuery.include = function(plugin) {
-  var js = jQuery.golf.plugins[plugin].js;
+jQuery.include = function(module) {
+  var js = module.js;
+  var d  = Debug(module.name);
   var argv = Array.prototype.slice.call(arguments, 1);
   if (js.length > 10)
-    jQuery.golf.doCall(window, jQuery, argv, js);
+    jQuery.golf.doCall(window, jQuery, argv, js, d);
 };
 
 // main jQ golf object
@@ -314,14 +315,14 @@ jQuery.golf = {
       pkg[m[2]] = jQuery.golf.modelConstructor(name);
     }
 
-    d("Loading plugins/ directory...");
-    for (name in jQuery.golf.plugins) {
-      mdl = jQuery.golf.plugins[name];
+    d("Loading modules/ directory...");
+    for (name in jQuery.golf.modules) {
+      mdl = jQuery.golf.modules[name];
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-        throw "bad plugin name: '"+name+"'";
+        throw "bad module name: '"+name+"'";
 
-      pkg = jQuery.golf.makePkg(m[1], Plugin);
-      pkg[m[2]] = jQuery.golf.pluginConstructor(name);
+      pkg = jQuery.golf.makePkg(m[1], Module);
+      pkg[m[2]] = { name: name, js: mdl.js };
     }
 
     d("Loading scripts/ directory...");
@@ -339,7 +340,8 @@ jQuery.golf = {
     jQuery.golf.setupComponents = function() {};
   },
 
-  doCall: function(obj, $, argv, js) {
+  doCall: function(obj, $, argv, js, d) {
+    d = !!d ? d : window.d;
     if (js.length > 10) {
       var f;
       eval("f = "+js);
@@ -439,16 +441,17 @@ jQuery.golf = {
       
       $.component = cmp;
 
-      $.include = function(plugin) {
-        var js = jQuery.golf.plugins[plugin].js;
+      $.include = function(module) {
+        var js = module.js;
+        var d  = Debug(module.name);
         var argv = Array.prototype.slice.call(arguments, 1);
         if (js.length > 10)
-          jQuery.golf.doCall(obj, $, argv, js);
+          jQuery.golf.doCall(obj, $, argv, js, d);
       }
 
       if (cmp) {
         obj._dom = jQuery(cmp.html);
-        jQuery.golf.doCall(obj, $, argv, cmp.js);
+        jQuery.golf.doCall(obj, $, argv, cmp.js, Debug(name));
       } else {
         throw "can't find component: "+name;
       }
@@ -467,7 +470,7 @@ jQuery.golf = {
       $.component = cmp;
 
       if (cmp) {
-        jQuery.golf.doCall(obj, $, argv, cmp.js);
+        jQuery.golf.doCall(obj, $, argv, cmp.js, Debug(name));
       } else {
         throw "can't find model: "+name;
       }
@@ -476,24 +479,6 @@ jQuery.golf = {
     return result;
   },
 
-  pluginConstructor: function(name) {
-    var result = function() {
-      var argv    = Array.prototype.slice.call(arguments);
-      var obj     = this;
-      var $       = {};
-      var cmp     = jQuery.golf.plugins[name];
-      
-      $.component = cmp;
-
-      if (cmp) {
-        jQuery.golf.doCall(obj, $, argv, cmp.js);
-      } else {
-        throw "can't find plugin: "+name;
-      }
-    };
-    result.prototype = new Plugin();
-    return result;
-  }
 };
 
 jQuery(jQuery.golf.onLoad);
