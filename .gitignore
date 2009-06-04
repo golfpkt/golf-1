@@ -6,7 +6,9 @@ docs/api
 *.swo
 *.war
 *~
-docs/golf/components.js
+hs_err_pid*
+components.js
+new.fc.html
+docs/golf/bots.txt
 docs/golf/forceproxy.txt
-docs/golf/new.fc.html
-docs/golf/new.html
+docs/golf/forceclient.txt

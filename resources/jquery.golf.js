@@ -6,6 +6,27 @@ function Component() {
 function Model() {
 }
 
+function Plugin() {
+}
+
+function Debug(prefix) {
+  return (function() {
+    var enabled = window.devmode;
+    return function(text) {
+      text = prefix+": "+text;
+      if (enabled) {
+        if (console && console.log) {
+          console.log(text);
+        } else {
+          enabled = confirm(text);
+        }
+      }
+    };
+  })();
+}
+
+window.d = Debug("GOLF");
+
 if (serverside) {
 
   jQuery.fx.off = true;
@@ -86,11 +107,20 @@ if (serverside) {
       };
     })(jQuery.fn.trigger);
 
+    jQuery.fn.val = (function(val) {
+      return function(newVal) {
+        if (arguments.length == 0)
+          return jQuery.trim(val.call(jQuery(this)));
+        else
+          return val.call(jQuery(this), newVal);
+      };
+    })(jQuery.fn.val);
+
     jQuery.ajax = (function(ajax) {
-        return function(options) {
-          options.async = false;
-          return ajax(options);
-        };
+      return function(options) {
+        options.async = false;
+        return ajax(options);
+      };
     })(jQuery.ajax);
 
   })();
@@ -252,10 +282,14 @@ jQuery.golf = {
   setupComponents: function() {
     var cmp, name, i, m, pkg, scripts=[];
 
+    d("Setting up components now.");
+
+    d("Loading styles/ directory...");
     for (name in jQuery.golf.styles)
       jQuery("head").append(
         "<style type='text/css'>"+jQuery.golf.styles[name].css+"</style>");
 
+    d("Loading components/ directory...");
     for (name in jQuery.golf.components) {
       cmp = jQuery.golf.components[name];
       // add css to <head>
@@ -270,6 +304,7 @@ jQuery.golf = {
       pkg[m[2]] = jQuery.golf.componentConstructor(name);
     }
 
+    d("Loading models/ directory...");
     for (name in jQuery.golf.models) {
       mdl = jQuery.golf.models[name];
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
@@ -279,6 +314,7 @@ jQuery.golf = {
       pkg[m[2]] = jQuery.golf.modelConstructor(name);
     }
 
+    d("Loading plugins/ directory...");
     for (name in jQuery.golf.plugins) {
       mdl = jQuery.golf.plugins[name];
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
@@ -288,6 +324,7 @@ jQuery.golf = {
       pkg[m[2]] = jQuery.golf.pluginConstructor(name);
     }
 
+    d("Loading scripts/ directory...");
     for (name in jQuery.golf.scripts)
       scripts.push(name);
 
@@ -297,6 +334,7 @@ jQuery.golf = {
     for (i=0, m=scripts.length; i<m; i++)
       jQuery.globalEval(jQuery.golf.scripts[scripts[i]].js);
 
+    d("Done loading directories...");
     // FIXME: hunit weirdness workaround
     jQuery.golf.setupComponents = function() {};
   },
@@ -324,6 +362,8 @@ jQuery.golf = {
   onHistoryChange: (function() {
     var lastHash = "";
     return function(hash, b) {
+
+      d("history change => '"+hash+"'");
       if (hash == "/") {
         jQuery.golf.location(String(jQuery.golf.defaultRoute));
         return;
@@ -380,6 +420,7 @@ jQuery.golf = {
       var argv = Array.prototype.slice.call(arguments);
       var obj  = this;
 
+      d("Instantiating component '"+jQuery.golf.components[name].name+"'");
       var $ = function(selector) {
         var isHtml = /^[^<]*(<(.|\s)+>)[^>]*$/;
 
