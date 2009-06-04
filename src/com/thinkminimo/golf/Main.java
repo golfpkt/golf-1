@@ -725,7 +725,7 @@ public class Main
     return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
            "jQuery.golf.models=" + getScriptsJSON("models", null) + ";" +
-           "jQuery.golf.plugins=" + getScriptsJSON("plugins", null) + ";" +
+           "jQuery.golf.modules=" + getScriptsJSON("modules", null) + ";" +
            "jQuery.golf.scripts=" + getScriptsJSON("scripts", null) + ";" +
            "jQuery.golf.styles=" + getStylesJSON("styles", null) + ";" +
            "jQuery.golf.setupComponents();";
