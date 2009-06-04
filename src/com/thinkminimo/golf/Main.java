@@ -722,7 +722,6 @@ public class Main
   }
 
   private static String getComponentsString() throws Exception {
-    System.err.println("----\n\n"+getResourcesJSON(null, null)+"\n\n----");
     return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
            "jQuery.golf.models=" + getScriptsJSON("models", null) + ";" +

@@ -1,0 +1,114 @@
+table {
+  margin: 0;
+  padding: 0;
+}
+
+a.golfproxylink {
+  text-decoration: inherit;
+  color: inherit;
+}
+
+table.formtable {
+  width: 100%;
+}
+
+input.text, textarea {
+  width: 100%;
+  border: 1px solid gray;
+  padding: 2px;
+}
+
+input.submit, select {
+  width: 100%;
+}
+
+table.tests {
+  border: 1px solid black;
+  margin: 2em auto;
+}
+
+table.tests > thead > tr > th > div {
+  width: 100%;
+  padding-left: 0.25em;
+  text-align: left;
+  background-image: url('?resource=bg.gif');
+  background-position: center right;
+  background-repeat: no-repeat;
+}
+
+table.tests > thead > tr > th > div.sort-asc {
+  background-image: url('?resource=asc.gif');
+}
+table.tests > thead > tr > th > div.sort-desc {
+  background-image: url('?resource=desc.gif');
+}
+
+table.tests > thead > tr > th {
+  border-bottom: 1px solid black;
+}
+
+table.tests > thead > tr > th > * {
+  cursor: pointer;
+}
+
+table.tests > tbody > tr > td {
+  border-bottom: 1px solid gray;
+  border-right: 1px solid gray;
+}
+
+table.tests > tbody > tr.even {
+  background: #eeeeff;
+}
+
+table.tests > tbody > tr.odd {
+  background: #ffffff;
+}
+
+table.tests > tbody > tr > td.pass, 
+table.tests > tbody > tr > td.fail, 
+table.tests > tbody > tr > td.error, 
+table.tests > tbody > tr > td.none, 
+table.tests > tbody > tr > td.wait {
+  font-family: monospace;
+  padding: 0px 5px 0px 5px;
+  text-align: center;
+  border-right: none;
+}
+
+table.tests > tbody > tr > td.pass {
+  color: green;
+  background: lightgreen;
+}
+
+table.tests > tbody > tr > td.fail {
+  color: red;
+  background: pink;
+}
+
+table.tests > tbody > tr > td.error {
+  color: white;
+  background: red;
+  width: 100%;
+}
+
+table.tests > tbody > tr > td.wait {
+  color: red;
+  background: gold;
+  width: 100%;
+}
+
+table.tests > tbody > tr > td.none {
+  color: #666;
+  background: lightgray;
+}
+
+.testnum {
+  font-family: monospace;
+  text-align: right;
+  padding: 0px 5px 0px 5px;
+}
+
+.testcase {
+  font-family: monospace;
+  padding: 0px 5px 0px 5px;
+}
