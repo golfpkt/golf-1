@@ -37,14 +37,6 @@ public class GolfServlet extends HttpServlet {
 
   public static final int     JSVM_TIMEOUT            = 10000;
 
-  public static final String  FILE_NEW_HTML           = "new.html";
-  public static final String  FILE_NEW_FC_HTML        = "new.fc.html";
-  public static final String  FILE_ERROR_HTML         = "error.html";
-  public static final String  FILE_JSDETECT_HTML      = "jsdetect.html";
-  public static final String  FILE_COMPONENTS_JS      = "components.js";
-  public static final String  FILE_FORCEPROXY_TXT     = "forceproxy.txt";
-  public static final String  FILE_FORCECLIENT_TXT    = "forceclient.txt";
-
   private class StoredJSVM {
     public WebClient client;
     public HtmlPage  lastPage;
@@ -395,26 +387,26 @@ public class GolfServlet extends HttpServlet {
         Main.cacheNewDotHtmlFile();
       }
       mNewHtml  =
-        (new GolfResource(getServletContext(), FILE_NEW_HTML)).toString();
+        (new GolfResource(getServletContext(), Main.NEW_HTML)).toString();
       mNewHtmlFc  =
-        (new GolfResource(getServletContext(), FILE_NEW_FC_HTML)).toString();
+        (new GolfResource(getServletContext(), Main.NEW_FC_HTML)).toString();
       mErrorPage =
-        (new GolfResource(getServletContext(), FILE_ERROR_HTML)).toString();
+        (new GolfResource(getServletContext(), Main.ERROR_HTML)).toString();
       mJsDetect = 
-        (new GolfResource(getServletContext(), FILE_JSDETECT_HTML)).toString();
+        (new GolfResource(getServletContext(), Main.JSDETECT_HTML)).toString();
       mComponents =
-        (new GolfResource(getServletContext(), FILE_COMPONENTS_JS)).toString();
+        (new GolfResource(getServletContext(), Main.COMPONENTS_JS)).toString();
 
       try {
         // wait for resource to be available
         while (!mBotMutex.compareAndSet(false, true));
 
         mForceProxy =
-          (new GolfResource(getServletContext(), FILE_FORCEPROXY_TXT))
+          (new GolfResource(getServletContext(), Main.FORCEPROXY_TXT))
             .toArrayList();
 
         mForceClient =
-          (new GolfResource(getServletContext(), FILE_FORCECLIENT_TXT))
+          (new GolfResource(getServletContext(), Main.FORCECLIENT_TXT))
             .toArrayList();
 
       } catch (FileNotFoundException fx) {
@@ -434,7 +426,7 @@ public class GolfServlet extends HttpServlet {
    * @param       server      whether to process for serverside or clientside
    * @return                  the processed page html contents
    */
-  private String preprocess(String page, GolfContext context, boolean server) {
+  private static String preprocess(String page, GolfContext context, boolean server) {
     String sid = context.request.getSession().getId();
 
     // pattern matching all script tags (should this be removed?)
