@@ -76,6 +76,6 @@ function() {
     $("tbody > tr", this).not($("td table *", this)).each(function(k,v) {
       $(this).removeClass(["odd","even"][k%2]).addClass(["even","odd"][k%2]);
     });
-  }).makeSortable();
+}).makeSortable();
 
 }
