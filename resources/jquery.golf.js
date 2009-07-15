@@ -10,19 +10,11 @@ function Module() {
 }
 
 function Debug(prefix) {
-  return (function() {
-    var enabled = window.devmode;
-    return function(text) {
-      text = prefix+": "+text;
-      if (enabled) {
-        if (console && console.log) {
-          console.log(text);
-        } else {
-          enabled = confirm(text);
-        }
-      }
-    };
-  })();
+  return function(text) {
+    text = prefix+": "+text;
+    if (window.devmode && window.console && window.console.log)
+      console.log(text);
+  };
 }
 
 window.d = Debug("GOLF");
@@ -477,7 +469,7 @@ jQuery.golf = {
     };
     result.prototype = new Model();
     return result;
-  },
+  }
 
 };
 
