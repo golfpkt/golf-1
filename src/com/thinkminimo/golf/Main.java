@@ -77,6 +77,28 @@ public class Main
   public    static final int          JETTY_PORT      = 4653;
   private   static final int          BUF_SIZE        = 1024;
 
+  public    static final String       NEW_HTML        = "new.html";
+  public    static final String       NEW_FC_HTML     = "new.fc.html";
+  public    static final String       ERROR_HTML      = "error.html";
+  public    static final String       HEAD_HTML       = "head.html";
+  public    static final String       JSDETECT_HTML   = "jsdetect.html";
+  public    static final String       COMPONENTS_JS   = "components.js";
+  public    static final String       CONTROLLER_JS   = "controller.js";
+  public    static final String       JQUERY_JS       = "jquery.js";
+  public    static final String       JQUERY_GOLF_JS  = "jquery.golf.js";
+  public    static final String       JQUERY_HIST_JS  = "jquery.address.js";
+  public    static final String       FORCEPROXY_TXT  = "forceproxy.txt";
+  public    static final String       FORCECLIENT_TXT = "forceclient.txt";
+  public    static final String       NOSCRIPT_HTML   = "noscript.html";
+  public    static final String       NOSCRIPT_FC_HTML= "noscript.forceclient.html";
+  public    static final String       LOADING_GIF     = "loading.gif";
+
+  public    static final String       DIR_COMPONENTS  = "components";
+  public    static final String       DIR_MODELS      = "models";
+  public    static final String       DIR_MODULES     = "modules";
+  public    static final String       DIR_SCRIPTS     = "scripts";
+  public    static final String       DIR_STYLES      = "styles";
+
   private   static GetOpt             o               = null;
   private   static RingList<String>   mCfDomains      = null;
   private   static String             mNewHtml        = null;
@@ -641,13 +663,14 @@ public class Main
 
   private void cacheJarResourcesAws() throws Exception {
     String[] resources = {
-      "/jquery.js",             "/jsdetect.html",
-      "/jquery.history.js",     "/loading.gif",
-      "/jquery.golf.js",    
-      "/taffy.js",          
+      JSDETECT_HTML,
+      JQUERY_JS,
+      JQUERY_HIST_JS,
+      JQUERY_GOLF_JS,
+      LOADING_GIF
     };
     for (String res : resources)
-      cacheJarResourceAws(res);
+      cacheJarResourceAws("/"+res);
   }
 
   private void cacheJarResourceAws(String name) throws Exception {
@@ -657,7 +680,7 @@ public class Main
 
   public static void cacheNewDotHtmlFile() throws Exception {
     String newHtmlStr = getNewDotHtmlString(false);
-    File f = new File(o.getOpt("approot|proxypath"), "new.html");
+    File f = new File(o.getOpt("approot|proxypath"), NEW_HTML);
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -666,7 +689,7 @@ public class Main
     out.close();
 
     newHtmlStr = getNewDotHtmlString(true);
-    f = new File(o.getOpt("approot|proxypath"), "new.fc.html");
+    f = new File(o.getOpt("approot|proxypath"), NEW_FC_HTML);
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -678,10 +701,10 @@ public class Main
   public static String getNewDotHtmlString(boolean fc) throws Exception {
     File   cwd  = new File(o.getOpt("approot|proxypath"));
 
-    GolfResource  newHtml       = new GolfResource(cwd, "new.html");
-    GolfResource  headHtml      = new GolfResource(cwd, "head.html");
+    GolfResource  newHtml       = new GolfResource(cwd, NEW_HTML);
+    GolfResource  headHtml      = new GolfResource(cwd, HEAD_HTML);
     GolfResource  noscriptHtml  = 
-      new GolfResource(cwd, (fc?"noscript.forceclient.html":"noscript.html"));
+      new GolfResource(cwd, (fc ? NOSCRIPT_FC_HTML : NOSCRIPT_HTML));
 
     if (mNewHtml == null)
       mNewHtml = newHtml.toString();
@@ -708,7 +731,7 @@ public class Main
   }
 
   public static void cacheComponentsFile() throws Exception {
-    File f = new File(o.getOpt("approot|proxypath"), "components.js");
+    File f = new File(o.getOpt("approot|proxypath"), COMPONENTS_JS);
     if (f.exists())
       f.delete();
     f.deleteOnExit();
@@ -718,16 +741,16 @@ public class Main
   }
 
   private void cacheComponentsAws() throws Exception {
-    cacheStringAws(getComponentsString(), "components.js", "text/javascript");
+    cacheStringAws(getComponentsString(), COMPONENTS_JS, "text/javascript");
   }
 
   private static String getComponentsString() throws Exception {
     return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
-           "jQuery.golf.models=" + getScriptsJSON("models", null) + ";" +
-           "jQuery.golf.modules=" + getScriptsJSON("modules", null) + ";" +
-           "jQuery.golf.scripts=" + getScriptsJSON("scripts", null) + ";" +
-           "jQuery.golf.styles=" + getStylesJSON("styles", null) + ";" +
+           "jQuery.golf.models=" + getScriptsJSON(DIR_MODELS, null) + ";" +
+           "jQuery.golf.modules=" + getScriptsJSON(DIR_MODULES, null) + ";" +
+           "jQuery.golf.scripts=" + getScriptsJSON(DIR_SCRIPTS, null) + ";" +
+           "jQuery.golf.styles=" + getStylesJSON(DIR_STYLES, null) + ";" +
            "jQuery.golf.setupComponents();";
   }
 
@@ -765,19 +788,19 @@ public class Main
 
     // these are system files that are of no use to a golf app
     for (String s : new String[] {
-      "components",
-      "scripts",
-      "styles",
-      "error.html",
-      "head.html",
-      "new.html",
-      "new.fc.html",
-      "noscript.forceclient.html",
-      "noscript.html",
-      "forceproxy.txt",
-      "forceclient.txt",
-      "components.js",
-      "controller.js"
+      DIR_COMPONENTS,
+      DIR_SCRIPTS,
+      DIR_STYLES,
+      ERROR_HTML,
+      HEAD_HTML,
+      NEW_HTML,
+      NEW_FC_HTML,
+      NOSCRIPT_FC_HTML,
+      NOSCRIPT_HTML,
+      FORCEPROXY_TXT,
+      FORCECLIENT_TXT,
+      COMPONENTS_JS,
+      CONTROLLER_JS
     }) json.remove(s);
 
     return json.toString();
@@ -789,7 +812,7 @@ public class Main
     if (json == null) json = new JSONObject();
 
     File file = 
-      new File(new File(o.getOpt("approot|proxypath"), "components"), path);
+      new File(new File(o.getOpt("approot|proxypath"), DIR_COMPONENTS), path);
       
     if (!file.getName().startsWith(".")) {
       if (file.isFile()) {
@@ -864,7 +887,7 @@ public class Main
   public static JSONObject processComponent(String name) throws Exception {
     name = name.replaceFirst("^/+", "");
     String className = name.replace('/', '-');
-    File   cwd       = new File(o.getOpt("approot|proxypath"), "components");
+    File   cwd       = new File(o.getOpt("approot|proxypath"), DIR_COMPONENTS);
 
     String html = name + ".html";
     String css  = name + ".css";
@@ -994,7 +1017,7 @@ public class Main
     result = result.replaceAll("[\\r\\n\\s]+", " ");
     // remove comments
     result = result.replaceAll("/\\*.*\\*/", "");
-    // this is bad but fuckit
+    // this is bad but the alternative is probably worse
     result = 
       result.replaceAll("(^|\\})\\s*([^{]*[^{\\s])*\\s*\\{", "$1 ." + 
           className + " $2 {");
@@ -1080,8 +1103,8 @@ public class Main
 
   private void cacheResourcesAws(File file, String path) throws Exception {
     if (path.startsWith("/.")         || 
-        path.equals("/head.html")     || 
-        path.equals("/noscript.html"))
+        path.equals("/"+HEAD_HTML)     || 
+        path.equals("/"+NOSCRIPT_HTML))
       return;
 
     if (file.isFile()) {
