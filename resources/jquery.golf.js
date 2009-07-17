@@ -121,6 +121,7 @@ if (serverside) {
 // install overrides on jQ DOM manipulation methods to accomodate components
 
 (function() {
+
     jQuery.each([
         "append",
         "prepend",
@@ -192,13 +193,13 @@ jQuery.Import = function(name) {
   return ret;
 };
 
-jQuery.include = function(module) {
-  var js = module.js;
-  var d  = Debug(module.name);
-  var argv = Array.prototype.slice.call(arguments, 1);
-  if (js.length > 10)
-    jQuery.golf.doCall(window, jQuery, argv, js, d);
-};
+// jQuery.include = function(module) {
+//   var js = module.js;
+//   var d  = Debug(module.name);
+//   var argv = Array.prototype.slice.call(arguments, 1);
+//   if (js.length > 10)
+//     jQuery.golf.doCall(window, jQuery, argv, js, d);
+// };
 
 // main jQ golf object
 
@@ -291,7 +292,7 @@ jQuery.golf = {
             "<style type='text/css'>"+cmp.css+"</style>");
 
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-        throw "bad component name: '"+name+"'";
+        m = [ "", "", name ];
 
       pkg = jQuery.golf.makePkg(m[1]);
       pkg[m[2]] = jQuery.golf.componentConstructor(name);
@@ -301,7 +302,7 @@ jQuery.golf = {
     for (name in jQuery.golf.models) {
       mdl = jQuery.golf.models[name];
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-        throw "bad model name: '"+name+"'";
+        m = [ "", "", name ];
 
       pkg = jQuery.golf.makePkg(m[1], Model);
       pkg[m[2]] = jQuery.golf.modelConstructor(name);
@@ -311,7 +312,7 @@ jQuery.golf = {
     for (name in jQuery.golf.modules) {
       mdl = jQuery.golf.modules[name];
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-        throw "bad module name: '"+name+"'";
+        m = [ "", "", name ];
 
       pkg = jQuery.golf.makePkg(m[1], Module);
       pkg[m[2]] = { name: name, js: mdl.js };
