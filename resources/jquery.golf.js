@@ -385,17 +385,19 @@ jQuery.golf = {
     if (!b) b = jQuery("body > div.golfbody").eq(0);
     //b.empty();
 
-    for (i in jQuery.golf.controller) {
-
-      pat   = new RegExp(jQuery.golf.controller[i].route);
-      match = theName.match(pat);
-
-      if (match) {
-        theAction = jQuery.golf.controller[i].action;
-        if (theAction(b, match)===false)
-          break;
-        theAction = null;
+    if (jQuery.golf.controller) {
+      for (i=0; i<jQuery.golf.controller.length; i++) {
+        pat   = new RegExp(jQuery.golf.controller[i].route);
+        match = theName.match(pat);
+        if (match) {
+          theAction = jQuery.golf.controller[i].action;
+          if (theAction(b, match)===false)
+            break;
+          theAction = null;
+        }
       }
+    } else {
+      alert("GOLF is installed! Congratulations. Now make yourself an app.");
     }
   },
 

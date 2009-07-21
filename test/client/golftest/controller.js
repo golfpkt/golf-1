@@ -16,13 +16,22 @@ $.golf.controller = [
       return function(b, match) {
         b.empty().append(t);
 
-        var tmp;
-
         t.test("route regexps", function() {
             return match[1] == "foo" && match[2] == "bar";
         });
 
-        tmp = t.test(
+        (function(tmp) {
+          t.wait(tmp);
+          $("form.test1").submit(function() {
+            t.assert(
+              $("[name='typeyes']").val() == "typedy type" &&
+              $("[name='txtarea']").val() == "this man is not to be trusted" &&
+              $("[name='selection']").val() == "lizards",
+              tmp);
+            $("input[type='submit']").val("Thanks!").attr("disabled", "true");
+            return false;
+          });
+        })(t.test(
           "<form class='test1'>"+
             "<table class='formtable'>"+
             "<colgroup>"+
@@ -40,7 +49,7 @@ $.golf.controller = [
               "</tr><tr>"+
                 "<td>two: </td>"+
                 "<td>"+
-                  "<textarea rows='5' name='atextarea' disabled='yes'>"+
+                  "<textarea rows='5' name='txtarea' disabled='yes'>"+
                     "this man is not to be trusted"+
                   "</textarea>"+
                 "</td>"+
@@ -64,26 +73,17 @@ $.golf.controller = [
             "</tbody>"+
             "</table>"+
           "</form>"
-        );
-        t.wait(tmp);
-        $("form.test1").submit(function() {
-          t.assert(
-            $("[name='typeyes']").val() == "typedy type" &&
-            $("[name='atextarea']").val() == "this man is not to be trusted" &&
-            $("[name='selection']").val() == "lizards",
-            tmp);
-          $("input[type='submit']").val("Thanks!").attr("disabled", "true");
-          return false;
-        });
+        ));
 
         t.test("head.html");
 
         t.test("constructor argv", (match[1] == "foo" && match[2] == "bar"));
 
-        t.test("AJAX GET");
-        $.get("?path=controller.js", function(data) {
-          t.assert(data.length > 10);
-        });
+        (function(tmp) {
+          $.get("?path=controller.js", function(data) {
+            t.assert(data.length > 10, tmp);
+          });
+        })(t.test("AJAX GET"));
 
         t.test("AJAX POST");
 
@@ -91,25 +91,24 @@ $.golf.controller = [
 
         t.test("AJAX DELETE");
 
-        t.test("JSONP GET");
-        (function() {
+        (function(tmp) {
           // flickr.com api url
           var url = "http://api.flickr.com/services/feeds/photos_public.gne"+
                       "?tags=dogs&tagmode=any&format=json&jsoncallback=?";
-          var e = $(".current");
-          t.fail(e);
+          t.fail(tmp);
           $.getJSON(url, function(data) {
             if (!data.items || data.items.length == 0)
-              t.error(e);
+              t.error(tmp);
             else
-              t.pass(e);
+              t.pass(tmp);
           });
-        })();
+        })(t.test("JSONP GET"));
 
-        t.test("$.golf.res object");
-        $.get($.golf.res.test["test.html"], function(data) {
-          t.assert(data == "PASS\n");
-        });
+        (function(tmp) {
+          $.get($.golf.res.test["test.html"], function(data) {
+            t.assert(data == "PASS\n");
+          });
+        })(t.test("$.golf.res object"));
 
         t.test("$.component.res object");
         /*
