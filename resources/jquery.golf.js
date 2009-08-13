@@ -212,7 +212,7 @@ jQuery.golf = {
   events: [],
 
   location: function(hash) {
-    $.address.value(hash);
+    jQuery.address.value(hash);
   },
 
   htmlEncode: function(text) {
@@ -344,7 +344,7 @@ jQuery.golf = {
     
   onLoad: function() {
     if (serverside)
-      $("noscript").remove();
+      jQuery("noscript").remove();
 
     if (urlHash && !location.hash)
       location.href = servletUrl + "#" + urlHash;
