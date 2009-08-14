@@ -94,8 +94,7 @@ public class Main
   public    static final String       LOADING_GIF     = "loading.gif";
 
   public    static final String       DIR_COMPONENTS  = "components";
-  public    static final String       DIR_MODELS      = "models";
-  public    static final String       DIR_MODULES     = "modules";
+  public    static final String       DIR_MODULES     = "plugins";
   public    static final String       DIR_SCRIPTS     = "scripts";
   public    static final String       DIR_STYLES      = "styles";
 
@@ -747,8 +746,7 @@ public class Main
   private static String getComponentsString() throws Exception {
     return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
-           "jQuery.golf.models=" + getScriptsJSON(DIR_MODELS, null) + ";" +
-           "jQuery.golf.modules=" + getScriptsJSON(DIR_MODULES, null) + ";" +
+           "jQuery.golf.plugins=" + getScriptsJSON(DIR_MODULES, null) + ";" +
            "jQuery.golf.scripts=" + getScriptsJSON(DIR_SCRIPTS, null) + ";" +
            "jQuery.golf.styles=" + getStylesJSON(DIR_STYLES, null) + ";" +
            "jQuery.golf.setupComponents();";
