@@ -1016,9 +1016,9 @@ public class Main
     // remove comments
     result = result.replaceAll("/\\*.*\\*/", "");
     // this is bad but the alternative is probably worse
-    result = 
-      result.replaceAll("(^|\\})\\s*([^{]*[^{\\s])*\\s*\\{", "$1 ." + 
-          className + " $2 {");
+    // result = 
+    //   result.replaceAll("(^|\\})\\s*([^{]*[^{\\s])*\\s*\\{", "$1 ." + 
+    //       className + " $2 {");
     result = result.trim();
 
     if (!o.getFlag("devmode"))

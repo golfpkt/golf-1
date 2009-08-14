@@ -255,6 +255,60 @@ $.golf = {
     };
   })(),
 
+  /* jss is based on: JSS - 0.4 by Andy Kent */
+
+  jss: {
+    
+    apply: function(data, $) {
+      $.each(this.parse(data), function() {
+        return $(this.selector).css(this.attributes);
+      });
+    },
+    
+    // ---
+    // Ultra lightweight CSS parser, only works with 100% valid css 
+    // files, no support for hacks etc.
+    // ---
+    
+    sanitize: function(content) {
+      if(!content) return '';
+      var c = content.replace(/[\n\r]/gi,''); // remove newlines
+      c = c.replace(/\/\*.+?\*\//gi,''); // remove comments
+      return c;
+    },
+    
+    parse: function(content) {
+      var c = this.sanitize(content);
+      var tree = []; // this is the css tree that is built up
+      c = c.match(/.+?\{.+?\}/gi); // seperate out selectors
+      if(!c) return [];
+      for(var i=0;i<c.length;i++) // loop through selectors & parse attributes
+        if(c[i]) 
+          tree.push( { 
+            selector: this.parseSelectorName(c[i]),
+            attributes: this.parseAttributes(c[i]) 
+          } );
+      return tree;
+    },
+    
+    parseSelectorName: function(content) { // extract the selector
+      return $.trim(content.match(/^.+?\{/)[0].replace('{','')); 
+    },
+    
+    parseAttributes: function(content) {
+      var attributes = {};
+      c = content.match(/\{.+?\}/)[0].replace(/[\{\}]/g,'').split(';').slice(0,-1);
+      for(var i=0;i<c.length; i++){
+        if(c[i]){
+          c[i] = c[i].split(':');
+          attributes[$.trim(c[i][0])] = $.trim(c[i][1]);
+        }; 
+      };
+      return attributes;
+    }
+
+  },
+
   makePkg: function(pkg, obj) {
     if (!obj)
       obj = Component;
@@ -288,9 +342,9 @@ $.golf = {
     for (name in $.golf.components) {
       cmp = $.golf.components[name];
       // add css to <head>
-      if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
-        $("head").append(
-            "<style type='text/css'>"+cmp.css+"</style>");
+      // if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
+      //   $("head").append(
+      //       "<style type='text/css'>"+cmp.css+"</style>");
 
       if (!(m = name.match(/^(.*)\.([^.]+)$/)))
         m = [ "", "", name ];
@@ -383,12 +437,25 @@ $.golf = {
   },
 
   prepare: function(p) {
-    $("a", p.parent()).each(function() { 
+    $("*", p.parent()).each(function() { 
         var jself = $(this);
+
         if (jself.data("_golf_prepared"))
           return;
+
         jself.data("_golf_prepared", true);
-        jself.href(this.href);
+
+        // makes hrefs in links work in both client and proxy modes
+        if (this.tagName == "A")
+          jself.href(this.href);
+
+        // this is for the jss "transaction log"
+        $.each([ "_golf_jss_log", "_golf_css_log", "_golf_att_log" ], 
+          function(k,v) {
+            if (!jself.data(v))
+              jself.data(v, {});
+          }
+        );
     });
     return p;
   },
@@ -404,8 +471,9 @@ $.golf = {
       var $fake = function( selector, context ) {
         return new $fake.fn.init( selector, context );
       };
+      d("got here 1");
 
-      $.extend($fake.prototype, $.fn);
+      $.extend(true, $fake, $);
       $fake.fn = $fake.prototype;
       $fake.fn.init.prototype = $fake.fn;
 
@@ -417,6 +485,7 @@ $.golf = {
           if (typeof(selector) != "string" || selector.match(isHtml))
             return new orig(selector);
 
+            d("got here X");
           return new orig(obj._dom)
                     .find(selector)
                     .not($(".component *", obj._dom).get())
@@ -424,17 +493,10 @@ $.golf = {
         };
       })($fake.fn.init);
 
+      d("got here 2");
       var cmp = $.golf.components[name];
       
       $fake.component = cmp;
-
-      $fake.include = function(module) {
-        var js = module.js;
-        var d  = Debug(module.name);
-        var argv = Array.prototype.slice.call(arguments, 1);
-        if (js.length > 10)
-          $.golf.doCall(obj, $fake, $fake, argv, js, d);
-      }
 
       $fake.require = function(name) {
         var js = $.golf.plugins[name].js;
@@ -445,10 +507,14 @@ $.golf = {
         }
       };
 
+      d("got here 3");
       if (cmp) {
         obj._dom = $(cmp.html);
-        obj._$   = $fake;
+        obj._jss = function() { $.golf.jss.apply(cmp.css, $fake) };
+        obj._jss();
+        d("got here 4");
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
+        d("got here 5");
       } else {
         throw "can't find component: "+name;
       }
