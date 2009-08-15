@@ -254,6 +254,7 @@ public class GolfServlet extends HttpServlet {
 
       if (!servletUrl.endsWith("/")) {
         urlHash += "/";
+        servletUrl += "/";
       }
 
       servletUrl  = servletUrl.replaceFirst(Pattern.quote(urlHash)+"$", "/")
