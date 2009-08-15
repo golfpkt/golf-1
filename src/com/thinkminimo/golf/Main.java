@@ -1007,18 +1007,10 @@ public class Main
       String fileName) {
     String result = text;
 
-    // Localize this css file by inserting the unique component css class
-    // in the beginning of every selector. Also remove extra whitespace and
-    // comments, etc.
-
     // remove newlines
     result = result.replaceAll("[\\r\\n\\s]+", " ");
     // remove comments
     result = result.replaceAll("/\\*.*\\*/", "");
-    // this is bad but the alternative is probably worse
-    // result = 
-    //   result.replaceAll("(^|\\})\\s*([^{]*[^{\\s])*\\s*\\{", "$1 ." + 
-    //       className + " $2 {");
     result = result.trim();
 
     if (!o.getFlag("devmode"))
