@@ -163,6 +163,32 @@ if (serverside) {
       }
     );
 
+    $.fn.golfcss = $.fn.css;
+    $.fn.css = function() {
+      var log = this.data("_golf_css_log") || {};
+
+      if (arguments.length > 0) {
+        if (typeof arguments[0] == "string") {
+          if (arguments.length == 1)
+            return this.golfcss(arguments[0]);
+          else
+            log[arguments[0]] = arguments[1];
+        } else {
+          $.extend(log, arguments[0]);
+        }
+
+        for (var i in log)
+          if (log[i] == "")
+            delete log[i];
+
+        this.data("_golf_css_log", log);
+        var ret = this.golfcss(arguments[0], arguments[1]);
+        $.golf.jss.doit(this);
+        return ret;
+      }
+      return this;
+    };
+
     $.fn.href = (function() {
       var uri2;
       return function(uri) {
@@ -298,8 +324,9 @@ $.golf = {
           function() {
             var jself = $(this);
             for (var i in jself.data("_golf_jss_log"))
-              jself.css(i, "");
+              jself.golfcss(i, "");
             jself.removeData("_golf_jss_log");
+            jself.golfcss(jself.data("_golf_css_log"));
           }
         );
 
@@ -315,7 +342,11 @@ $.golf = {
               if (!jself.data("_golf_jss_log"))
                 jself.data("_golf_jss_log", {});
               $.extend(jself.data("_golf_jss_log"), attrs);
-              jself.css(attrs);
+              jself.golfcss(attrs);
+              var log = jself.data("_golf_css_log");
+              for (i in log)
+                d("PROP -----> "+i+" => '"+log[i]+"'");
+              jself.golfcss(jself.data("_golf_css_log"));
             }
           );
       });
