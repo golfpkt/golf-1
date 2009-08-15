@@ -137,10 +137,28 @@ if (serverside) {
             $(e.parent()).each(function() {
               $(this).removeData("_golf_prepared");
             });
+            $.golf.jss.doit(this);
             if (a instanceof Component && a.onAppend)
               a.onAppend();
             return $(this);
           }; 
+        })($.fn[v]);
+      }
+    );
+
+    $.each(
+      [
+        "addClass",
+        "removeClass",
+        "toggleClass"
+      ],
+      function(k,v) {
+        (function(orig) {
+          $.fn[v] = function() {
+            var ret = orig.apply(this, arguments);
+            $.golf.jss.doit(this);
+            return ret;
+          };
         })($.fn[v]);
       }
     );
@@ -259,9 +277,47 @@ $.golf = {
 
   jss: {
     
-    apply: function(data, $) {
-      $.each(this.parse(data), function() {
-        return $(this.selector).css(this.attributes);
+    doit: function(elem) {
+      var cpdom, cpname, data, parsed;
+
+      try {
+        cpdom  = $(elem).parents(".component").eq(0);
+        cpname = cpdom.attr("class").split(" ")[1].replace(/-/g, ".");
+        data   = $.golf.components[cpname].css;
+        parsed = this.parse(data);
+      } 
+      catch (x) {
+        d("can't do jss--skipping it");
+        return;
+      }
+
+      $("*", cpdom)
+        .not($(".component *", cpdom))
+        .not(".component")
+        .each(
+          function() {
+            var jself = $(this);
+            for (var i in jself.data("_golf_jss_log"))
+              jself.css(i, "");
+            jself.removeData("_golf_jss_log");
+          }
+        );
+
+      $.each(parsed, function() {
+        var selector = this.selector;
+        var attrs    = this.attributes;
+        $(selector, cpdom)
+          .not($(".component *", cpdom))
+          .not(".component")
+          .each(
+            function() {
+              var jself = $(this);
+              if (!jself.data("_golf_jss_log"))
+                jself.data("_golf_jss_log", {});
+              $.extend(jself.data("_golf_jss_log"), attrs);
+              jself.css(attrs);
+            }
+          );
       });
     },
     
@@ -382,7 +438,7 @@ $.golf = {
       $("noscript").remove();
 
     if (urlHash && !location.hash)
-      location.href = servletUrl + "#" + urlHash;
+      window.location.replace(servletUrl + "#" + urlHash);
 
     $.address.change(function(evnt) {
         $.golf.onHistoryChange(evnt.value);
@@ -464,6 +520,7 @@ $.golf = {
     var result = function() {
       var argv = Array.prototype.slice.call(arguments);
       var obj  = this;
+      var cmp  = $.golf.components[name];
 
       d("Instantiating component '"+$.golf.components[name].name+"'");
 
@@ -471,11 +528,11 @@ $.golf = {
       var $fake = function( selector, context ) {
         return new $fake.fn.init( selector, context );
       };
-      d("got here 1");
 
       $.extend(true, $fake, $);
       $fake.fn = $fake.prototype;
       $fake.fn.init.prototype = $fake.fn;
+      $fake.Event.prototype = $.Event.prototype;
 
       (function(orig) {
         $fake.fn.init = function(selector) {
@@ -485,7 +542,6 @@ $.golf = {
           if (typeof(selector) != "string" || selector.match(isHtml))
             return new orig(selector);
 
-            d("got here X");
           return new orig(obj._dom)
                     .find(selector)
                     .not($(".component *", obj._dom).get())
@@ -493,28 +549,25 @@ $.golf = {
         };
       })($fake.fn.init);
 
-      d("got here 2");
-      var cmp = $.golf.components[name];
-      
       $fake.component = cmp;
 
-      $fake.require = function(name) {
-        var js = $.golf.plugins[name].js;
+      $fake.require = function(name, obj) {
+        var js        = $.golf.plugins[name].js;
+        var exports   = {};
+        var target    = obj || window;
         try {
-          (function(jQuery,$,js) { eval(js) }).call(window,$fake,$fake,js);
+          (function(jQuery,$,js,exports) {
+            eval(js)
+          }).call(target,$fake,$fake,js,exports);
         } catch (x) {
           d("can't require("+name+"): "+x);
         }
+        return exports;
       };
 
-      d("got here 3");
       if (cmp) {
         obj._dom = $(cmp.html);
-        obj._jss = function() { $.golf.jss.apply(cmp.css, $fake) };
-        obj._jss();
-        d("got here 4");
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
-        d("got here 5");
       } else {
         throw "can't find component: "+name;
       }
