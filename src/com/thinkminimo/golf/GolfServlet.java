@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.*;
+import java.util.regex.Pattern;
 import net.sourceforge.htmlunit.corejs.javascript.*;
 
 import java.net.*;
@@ -46,6 +47,12 @@ public class GolfServlet extends HttpServlet {
       this.client   = client;
       this.lastPage = null;
       this.lastAccessTime = (new Date()).getTime();
+    }
+  }
+
+  public static class PermanentRedirectException extends Exception {
+    public PermanentRedirectException(String msg) {
+      super(msg);
     }
   }
 
@@ -226,7 +233,7 @@ public class GolfServlet extends HttpServlet {
                             .replaceFirst(";jsessionid=.*$", "");
     }
 
-    public void init() throws ServletException, RedirectException {
+    public void init() throws ServletException, PermanentRedirectException {
       try {
         servletUrl  = URLDecoder.decode(servletUrl, "UTF-8");
       } catch (UnsupportedEncodingException e) {
@@ -235,10 +242,8 @@ public class GolfServlet extends HttpServlet {
 
       String origRequestUrl = servletUrl;
 
-      if (urlHash == null)
-        urlHash = "/";
-
-      if (urlHash.equals("/"))
+      // some servlet containers have been known to produce a null urlHash
+      if (urlHash == null || urlHash.equals("/"))
         urlHash = "";
 
       // ensure that the URL is in the standard form
@@ -251,14 +256,14 @@ public class GolfServlet extends HttpServlet {
         urlHash += "/";
       }
 
-      servletUrl  = servletUrl.replaceFirst("\\Q"+urlHash+"\\E$", "/")
+      servletUrl  = servletUrl.replaceFirst(Pattern.quote(urlHash)+"$", "/")
                       .replaceFirst("/+$", "/");
       urlHash     = urlHash.replaceFirst("^/+", "/");
 
       String newUrl = servletUrl + urlHash;
 
       if (!origRequestUrl.equals(newUrl))
-        throw new RedirectException(
+        throw new PermanentRedirectException(
             response.encodeRedirectURL(newUrl));
 
       jsvm = mJsvms.get(request.getSession().getId());
@@ -345,7 +350,7 @@ public class GolfServlet extends HttpServlet {
 
       if (! url.endsWith("/")) {
         //System.err.println("{{{ REDIRECT 7 }}}");
-        throw new RedirectException(
+        throw new PermanentRedirectException(
             context.response.encodeRedirectURL(url + "/"));
       }
 
@@ -354,6 +359,14 @@ public class GolfServlet extends HttpServlet {
         doStaticResourceGet(context);
       else
         doDynamicResourceGet(context);
+    }
+
+    catch (PermanentRedirectException r) {
+      // 301 PERMANENTLY MOVED
+      logResponse(context, 301);
+      log(context, LOG_INFO, "301 ---to--> "+r.getMessage());
+      context.response.setHeader("Location", r.getMessage());
+      context.response.sendError(301);
     }
 
     catch (RedirectException r) {
