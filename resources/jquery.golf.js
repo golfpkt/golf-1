@@ -18,6 +18,8 @@ function $local(selector, root) {
 }
 
 function checkForReservedClass(elems, shutup) {
+  if (! $.golf.reservedClassChecking)
+    return [];
   var RESERVED_CLASSES = [ "component", "golfbody", "golfproxylink" ];
   var badclass = (
     (typeof elems == "string") 
@@ -293,6 +295,8 @@ $.golf = {
   defaultRoute: "/home/",
   
   onRouteError: undefined,
+
+  reservedClassChecking: true,
 
   events: [],
 
