@@ -383,7 +383,7 @@ $.golf = {
             jself.golfcss(attrs);
             var log = jself.data("_golf_css_log");
             for (i in log)
-            jself.golfcss(jself.data("_golf_css_log"));
+              jself.golfcss(jself.data("_golf_css_log"));
           }
         );
       });
