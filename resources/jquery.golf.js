@@ -280,6 +280,20 @@ $.Import = function(name) {
   return ret;
 };
 
+$.require = function(name, obj) {
+  var js        = $.golf.plugins[name].js;
+  var exports   = {};
+  var target    = obj || window;
+  try {
+    (function(js,exports) {
+      eval(js)
+    }).call(target,js,exports);
+  } catch (x) {
+    d("can't do require("+name+"): "+x);
+  }
+  return exports;
+};
+
 // jQuery.include = function(module) {
 //   var js = module.js;
 //   var d  = Debug(module.name);
@@ -291,6 +305,8 @@ $.Import = function(name) {
 // main jQ golf object
 
 $.golf = {
+
+  controller: [],
 
   defaultRoute: "/home/",
   
@@ -455,6 +471,14 @@ $.golf = {
   setupComponents: function() {
     var cmp, name, i, m, pkg, scripts=[];
 
+    // wait for all to be loaded before proceeding.
+    if (! "styles" in $.golf || ! "components" in $.golf ||
+      ! "scripts" in $.golf || ! "plugins" in $.golf) {
+      setTimeout(setupComponents, 100);
+      return;
+    }
+      
+    
     d("Setting up components now.");
 
     d("Loading styles/ directory...");
