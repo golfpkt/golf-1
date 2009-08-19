@@ -314,6 +314,8 @@ $.golf = {
 
   reservedClassChecking: true,
 
+  loaded: false,
+
   events: [],
 
   location: function(hash) {
@@ -363,13 +365,18 @@ $.golf = {
 
   jss: {
     
-    doit: function(elem) {
+    doit: function(elem, force) {
       var cpdom, cpname, data, parsed;
+
+      if (serverside && !force)
+        return;
 
       try {
         cpdom  = $(elem).parents(".component").eq(0);
+
         if (cpdom.size() == 0)
           return;
+
         cpname = cpdom.attr("class").split(" ")[1].replace(/-/g, ".");
         data   = $.golf.components[cpname].css;
         parsed = this.parse(data);
@@ -519,7 +526,6 @@ $.golf = {
       setTimeout(setupComponents, 100);
       return;
     }
-      
     
     d("Setting up components now.");
 
@@ -556,6 +562,8 @@ $.golf = {
     d("Done loading directories...");
     // FIXME: hunit weirdness workaround
     $.golf.setupComponents = function() {};
+
+    $.golf.loaded = true;
   },
 
   doCall: function(obj, jQuery, $, argv, js, d) {
@@ -714,6 +722,14 @@ $.golf = {
 
 };
 
-$($.golf.onLoad);
+$(function() {
+  function loadme() {  
+    if (!$.golf.loaded)
+      setTimeout(loadme, 100);
+    else
+      $.golf.onLoad();
+  }
+  loadme();
+});
 
 })(jQuery);
