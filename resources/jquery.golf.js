@@ -368,12 +368,14 @@ $.golf = {
 
       try {
         cpdom  = $(elem).parents(".component").eq(0);
+        if (cpdom.size() == 0)
+          return;
         cpname = cpdom.attr("class").split(" ")[1].replace(/-/g, ".");
         data   = $.golf.components[cpname].css;
         parsed = this.parse(data);
       } 
       catch (x) {
-        d("can't do jss--skipping it");
+        d("WARN: can't do jss: "+x);
         return;
       }
 
@@ -382,24 +384,64 @@ $.golf = {
           var jself = $(this);
           for (var i in jself.data("_golf_jss_log"))
             jself.golfcss(i, "");
-          jself.removeData("_golf_jss_log");
+          jself.data("_golf_jss_log", {});
+          jself.data("_golf_jss_spc", {});
           jself.golfcss(jself.data("_golf_css_log"));
         }
       );
 
       $.each(parsed, function() {
-        var selector = this.selector;
-        var attrs    = this.attributes;
-        $local(selector, cpdom).each(
-          function() {
-            var jself = $(this);
-            if (!jself.data("_golf_jss_log"))
-              jself.data("_golf_jss_log", {});
-            $.extend(jself.data("_golf_jss_log"), attrs);
-            jself.golfcss(attrs);
-            var log = jself.data("_golf_css_log");
-            for (i in log)
-              jself.golfcss(jself.data("_golf_css_log"));
+        var selectors = this.selector;
+        var attrs     = this.attributes;
+
+        $.each(
+          selectors.split(/ *, */),
+          function(k, selector) {
+            var parser = /([a-z][a-z0-9]*|\*)|(#[_a-z][-_a-z0-9]*)|(\.[_a-z][-_a-z0-9]*|\[[^\]]+\])|(:[-a-z]+)|( *[>+~] *| +)/gi;
+            var pseudo = /^:(first-(line|letter)|before|after)$/;
+            var base=32,TAG=1,ID=2,ATTR=3,PSEUDO=4,COMBI=5,weight=0,m;
+
+            parser.lastIndex = 0;
+
+            while (m = parser.exec(selector)) {
+              if (m[ID]) {
+                weight += 32*32;
+              } else if (m[ATTR]) {
+                weight += 32;
+              } else if (m[PSEUDO]) {
+                weight += (m[PSEUDO].match(pseudo) ? 1 : 10);
+              } else if (m[TAG]) {
+                weight += 1;
+              }
+            }
+
+            $local(selector, cpdom).each(
+              function() {
+                var jself=$(this), log, i;
+
+                if (!jself.data("_golf_jss_log"))
+                  jself.data("_golf_jss_log", {});
+                if (!jself.data("_golf_jss_spc"))
+                  jself.data("_golf_jss_spc", {});
+
+                log = jself.data("_golf_jss_spc");
+                for (i in attrs) {
+                  if (log[i] > weight)
+                    delete attrs[i];
+                  else
+                    log[i] = weight;
+                }
+
+                $.extend(jself.data("_golf_jss_spc"), log);
+                $.extend(jself.data("_golf_jss_log"), attrs);
+
+                jself.golfcss(attrs);
+                
+                log = jself.data("_golf_css_log");
+                for (i in log)
+                  jself.golfcss(jself.data("_golf_css_log"));
+              }
+            );
           }
         );
       });
@@ -598,7 +640,7 @@ $.golf = {
           jself.href(this.href);
 
         // this is for the jss "transaction log"
-        $.each([ "_golf_jss_log", "_golf_css_log", "_golf_att_log" ], 
+        $.each([ "_golf_jss_log", "_golf_css_log", "_golf_jss_spc" ], 
           function(k,v) {
             if (!jself.data(v))
               jself.data(v, {});
@@ -660,6 +702,7 @@ $.golf = {
       if (cmp) {
         obj._dom = $(cmp.html);
         checkForReservedClass(obj._dom.children().find("*"));
+        $.golf.jss.doit(obj._dom.children());
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
       } else {
         throw "can't find component: "+name;
