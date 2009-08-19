@@ -686,6 +686,17 @@ public class GolfServlet extends HttpServlet {
       a.setAttribute("href",context.response.encodeURL(a.getHrefAttribute()));
     }
 
+    result.executeJavaScript(
+      "jQuery('.component').each( " +
+        "function() { "+
+          "var elem = jQuery(this).children().eq(0); "+
+          "if (elem) { "+
+            "jQuery.golf.jss.doit(elem, true); "+
+          "} "+
+        "} "+
+      ")"
+    );
+              
     String html = preprocess(result.asXml(), context, false);
     sendResponse(context, html, "text/html", false);
   }
