@@ -235,6 +235,8 @@ if (serverside) {
       var uri2;
       return function(uri) {
         var uri1  = $.golf.parseUri(uri);
+        var uri3  = $.golf.parseUri(window.location.href);
+        var anchor;
 
         if (!uri2)
           uri2 = $.golf.parseUri(servletUrl);
@@ -247,11 +249,17 @@ if (serverside) {
             if (cloudfrontDomain.length)
               uri = cloudfrontDomain[0]+uri.queryKey.path;
           } else if (uri1.anchor) {
+            if (!uri1.anchor.match(/^\//)) {
+              anchor = (uri3.anchor ? uri3.anchor : "/") + uri1.anchor;
+              uri = "#"+anchor;
+            } else {
+              anchor = uri1.anchor;
+            }
             if (serverside)
-              uri = servletUrl + uri1.anchor;
+              uri = servletUrl + anchor;
             else
               $(this).click(function() {
-                $.golf.location(uri1.anchor);
+                $.golf.location(anchor);
                 return false;
               });
           }
