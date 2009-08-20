@@ -234,8 +234,8 @@ if (serverside) {
     $.fn.href = (function() {
       var uri2;
       return function(uri) {
-        var uri1  = $.golf.parseUri(uri);
-        var uri3  = $.golf.parseUri(window.location.href);
+        var uri1    = $.golf.parseUri(uri);
+        var curHash = window.location.hash.replace(/^#/, "");
         var anchor;
 
         if (!uri2)
@@ -250,7 +250,7 @@ if (serverside) {
               uri = cloudfrontDomain[0]+uri.queryKey.path;
           } else if (uri1.anchor) {
             if (!uri1.anchor.match(/^\//)) {
-              anchor = (uri3.anchor ? uri3.anchor : "/") + uri1.anchor;
+              anchor = (curHash ? curHash : "/") + uri1.anchor;
               uri = "#"+anchor;
             } else {
               anchor = uri1.anchor;
