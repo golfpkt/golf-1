@@ -163,7 +163,7 @@ if (serverside) {
             $(e.parent()).each(function() {
               $(this).removeData("_golf_prepared");
             });
-            $.golf.jss.doit(this);
+            $.golf.jss.mark(this);
             if (a instanceof Component && a.onAppend)
               a.onAppend();
             return $(this);
@@ -198,7 +198,7 @@ if (serverside) {
             for (var i in putback)
               for (var j in putback[i])
                 $(putback[i][j]).addClass(i);
-            $.golf.jss.doit(this);
+            $.golf.jss.mark(this);
             return ret;
           };
         })($.fn[v]);
@@ -225,7 +225,7 @@ if (serverside) {
 
         this.data("_golf_css_log", log);
         var ret = this.golfcss(arguments[0], arguments[1]);
-        $.golf.jss.doit(this);
+        $.golf.jss.mark(this);
         return ret;
       }
       return this;
@@ -373,6 +373,25 @@ $.golf = {
 
   jss: {
     
+    mark: function(elem) {
+      var cpdom;
+
+      try {
+        cpdom  = $(elem).parents(".component").eq(0);
+
+        if (cpdom.size() == 0 || cpdom.data("_golf_constructing"))
+          return;
+      }
+      catch (x) {
+        d("WARN: can't do mark: "+x);
+        return;
+      }
+      d("mark()");
+
+      cpdom.data("_golf_jss_dirty", true);
+      setTimeout(function() { $.golf.jss.doit(elem) }, 10);
+    },
+
     doit: function(elem, force) {
       var cpdom, cpname, data, parsed;
 
@@ -382,8 +401,11 @@ $.golf = {
       try {
         cpdom  = $(elem).parents(".component").eq(0);
 
-        if (cpdom.size() == 0)
+        if (cpdom.size() == 0 || cpdom.data("_golf_constructing")
+            || !cpdom.data("_golf_jss_dirty"))
           return;
+
+        cpdom.removeData("_golf_jss_dirty");
 
         cpname = cpdom.attr("class").split(" ")[1].replace(/-/g, ".");
         data   = $.golf.components[cpname].css;
@@ -393,6 +415,7 @@ $.golf = {
         d("WARN: can't do jss: "+x);
         return;
       }
+      d("doit()");
 
       $local("*", cpdom).each(
         function() {
@@ -525,8 +548,30 @@ $.golf = {
     return $.golf.makePkg(m[4], obj[m[1]]);
   },
 
+  addComponent: function(data, name) {
+    var html = $("<div>"+data+"</div>");
+    var css  = html.find("style[type='text/golf']").remove().text();
+    var js   = html.find("script[type='text/golf']").remove().text();
+    var cmp  = { 
+      "name"  : name,
+      "html"  : html.html(),
+      "dom"   : $(html.html()),
+      "css"   : css,
+      "js"    : js 
+    };
+    var m, pkg;
+
+    $.golf.components[name] = cmp;
+
+    if (!(m = name.match(/^(.*)\.([^.]+)$/)))
+      m = [ "", "", name ];
+
+    pkg = $.golf.makePkg(m[1]);
+    pkg[m[2]] = $.golf.componentConstructor(name);
+  },
+
   setupComponents: function() {
-    var cmp, name, i, m, pkg, scripts=[];
+    var cmp, name, i, m, scripts=[];
 
     // wait for all to be loaded before proceeding.
     if (! "styles" in $.golf || ! "components" in $.golf ||
@@ -543,19 +588,8 @@ $.golf = {
         "<style type='text/css'>"+$.golf.styles[name].css+"</style>");
 
     d("Loading components/ directory...");
-    for (name in $.golf.components) {
-      cmp = $.golf.components[name];
-      // add css to <head>
-      // if (cmp.css.replace(/^\s+|\s+$/g, '').length > 3)
-      //   $("head").append(
-      //       "<style type='text/css'>"+cmp.css+"</style>");
-
-      if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-        m = [ "", "", name ];
-
-      pkg = $.golf.makePkg(m[1]);
-      pkg[m[2]] = $.golf.componentConstructor(name);
-    }
+    for (name in $.golf.components)
+      $.golf.addComponent($.golf.components[name].html, name);
 
     d("Loading scripts/ directory...");
     for (name in $.golf.scripts)
@@ -717,9 +751,12 @@ $.golf = {
 
       if (cmp) {
         obj._dom = $(cmp.html);
+        obj._dom.data("_golf_constructing", true);
         checkForReservedClass(obj._dom.children().find("*"));
-        $.golf.jss.doit(obj._dom.children());
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
+        obj._dom.removeData("_golf_constructing");
+        $.golf.jss.mark(obj._dom.children().eq(0));
+        $.golf.jss.doit(obj._dom.children().eq(0));
       } else {
         throw "can't find component: "+name;
       }
