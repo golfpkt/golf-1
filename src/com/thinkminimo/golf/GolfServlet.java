@@ -566,8 +566,9 @@ public class GolfServlet extends HttpServlet {
 
               String script = "jQuery(\"[name='"+key+"']\").val(\""+val+"\");";
 
-              if (Boolean.parseBoolean(mDevMode))
-                script = mComponents + script;
+              // removed components update due to issues
+              // if (Boolean.parseBoolean(mDevMode))
+              //   script = mComponents + script;
               result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
               result.executeJavaScript(script);
             }
@@ -624,8 +625,9 @@ public class GolfServlet extends HttpServlet {
           );
         } else {
           String script = "jQuery.address.value('"+context.urlHash+"');";
-          if (Boolean.parseBoolean(mDevMode))
-            script = mComponents + script;
+          // removed components update due to issues
+          // if (Boolean.parseBoolean(mDevMode))
+          //   script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         }
@@ -643,8 +645,9 @@ public class GolfServlet extends HttpServlet {
             throw new RedirectException(
                 context.response.encodeRedirectURL(context.servletUrl + path));
           }
-          if (Boolean.parseBoolean(mDevMode))
-            script = mComponents + script;
+          // removed components update due to issues
+          // if (Boolean.parseBoolean(mDevMode))
+          //   script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         } else {
