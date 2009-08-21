@@ -302,14 +302,6 @@ $.require = function(name, obj) {
   return exports;
 };
 
-// jQuery.include = function(module) {
-//   var js = module.js;
-//   var d  = Debug(module.name);
-//   var argv = Array.prototype.slice.call(arguments, 1);
-//   if (js.length > 10)
-//     jQuery.golf.doCall(window, jQuery, argv, js, d);
-// };
-
 // main jQ golf object
 
 $.golf = {
@@ -714,7 +706,7 @@ $.golf = {
       };
 
       $.extend(true, $fake, $);
-      $fake.fn = $fake.prototype;
+      $fake.prototype = $fake.fn;
       $fake.fn.init.prototype = $fake.fn;
       $fake.Event.prototype = $.Event.prototype;
 
