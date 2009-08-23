@@ -50,14 +50,14 @@ public class GolfServlet extends HttpServlet {
     }
   }
 
-  public static class PermanentRedirectException extends Exception {
-    public PermanentRedirectException(String msg) {
+  public static class RedirectException extends Exception {
+    public RedirectException(String msg) {
       super(msg);
     }
   }
 
-  public static class RedirectException extends Exception {
-    public RedirectException(String msg) {
+  public static class PermanentRedirectException extends RedirectException {
+    public PermanentRedirectException(String msg) {
       super(msg);
     }
   }
@@ -148,6 +148,7 @@ public class GolfServlet extends HttpServlet {
     private Integer   mSeq        = -1;
     private Boolean   mJs         = false;
     private String    mPath       = null;
+    private Boolean   mReload     = false;
 
     public GolfParams(HttpServletRequest req) {
       mEvent      = req.getParameter("event");
@@ -162,6 +163,9 @@ public class GolfServlet extends HttpServlet {
                       ? null
                       : Boolean.parseBoolean(req.getParameter("js"));
       mPath       = req.getParameter("path");
+      mReload     = req.getParameter("reload") == null 
+                      ? null
+                      : Boolean.parseBoolean(req.getParameter("reload"));
     }
 
     public String   getEvent()          { return mEvent; }
@@ -170,6 +174,7 @@ public class GolfServlet extends HttpServlet {
     public Integer  getSeq()            { return mSeq; }
     public Boolean  getJs()             { return mJs; }
     public String   getPath()           { return mPath; }
+    public Boolean  getReload()         { return mReload; }
 
     public void setEvent(String v)      { mEvent      = v; }
     public void setTarget(String v)     { mTarget     = v; }
@@ -177,6 +182,7 @@ public class GolfServlet extends HttpServlet {
     public void setSeq(Integer v)       { mSeq        = v; }
     public void setJs(Boolean v)        { mJs         = v; }
     public void setPath(String v)       { mPath       = v; }
+    public void setReload(Boolean v)    { mReload     = v; }
 
     private String toQueryParam(String name, String p) {
       return p != null ? name+"="+p : "";
@@ -196,6 +202,7 @@ public class GolfServlet extends HttpServlet {
       result += toQueryParam("golf",      mSeq);
       result += toQueryParam("js",        mJs);
       result += toQueryParam("path",      mPath);
+      result += toQueryParam("reload",    mReload);
       return result.length() > 0 ? "?"+result : "";
     }
   }
@@ -219,6 +226,8 @@ public class GolfServlet extends HttpServlet {
     /**
      * Constructor.
      *
+     * FIXME implement this as a singleton
+     *
      * @param       request     the http request object
      * @param       response    the http response object
      */
@@ -233,11 +242,18 @@ public class GolfServlet extends HttpServlet {
                             .replaceFirst(";jsessionid=.*$", "");
     }
 
-    public void init() throws ServletException, PermanentRedirectException {
+    public void init() throws ServletException, RedirectException {
       try {
         servletUrl  = URLDecoder.decode(servletUrl, "UTF-8");
       } catch (UnsupportedEncodingException e) {
         throw new ServletException(e);
+      }
+
+      // this is why this should be a singleton!
+      if (p.getReload() != null && ! p.getReload().booleanValue()) {
+        request.getSession(true).invalidate();
+        mJsvms.remove(request.getSession().getId());
+        throw new RedirectException(response.encodeRedirectURL(servletUrl));
       }
 
       String origRequestUrl = servletUrl;
@@ -263,9 +279,11 @@ public class GolfServlet extends HttpServlet {
 
       String newUrl = servletUrl + urlHash;
 
-      if (!origRequestUrl.equals(newUrl))
+      if (!origRequestUrl.equals(newUrl)) {
+        //System.err.println("{{{ REDIRECT 0 }}}");
         throw new PermanentRedirectException(
-            response.encodeRedirectURL(newUrl));
+            response.encodeRedirectURL(response.encodeRedirectURL(newUrl)));
+      }
 
       jsvm = mJsvms.get(request.getSession().getId());
 
@@ -567,8 +585,8 @@ public class GolfServlet extends HttpServlet {
               String script = "jQuery(\"[name='"+key+"']\").val(\""+val+"\");";
 
               // removed components update due to issues
-              // if (Boolean.parseBoolean(mDevMode))
-              //   script = mComponents + script;
+              if (Boolean.parseBoolean(mDevMode))
+                script = mComponents + script;
               result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
               result.executeJavaScript(script);
             }
@@ -626,8 +644,8 @@ public class GolfServlet extends HttpServlet {
         } else {
           String script = "jQuery.address.value('"+context.urlHash+"');";
           // removed components update due to issues
-          // if (Boolean.parseBoolean(mDevMode))
-          //   script = mComponents + script;
+          if (Boolean.parseBoolean(mDevMode))
+            script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         }
@@ -646,8 +664,8 @@ public class GolfServlet extends HttpServlet {
                 context.response.encodeRedirectURL(context.servletUrl + path));
           }
           // removed components update due to issues
-          // if (Boolean.parseBoolean(mDevMode))
-          //   script = mComponents + script;
+          if (Boolean.parseBoolean(mDevMode))
+            script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         } else {
