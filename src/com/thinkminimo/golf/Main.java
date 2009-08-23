@@ -893,13 +893,12 @@ public class Main
     GolfResource htmlRes = new GolfResource(cwd, html);
     File         resDir  = new File(cwd, res);
 
-    String htmlStr  = processComponentHtml(htmlRes.toString(), className);
     JSONObject resObj   = 
       processComponentRes(resDir, cwd, resDir, null);
 
     String resUriPath = "?path=components/"+getRelativePath(resDir, cwd);
 
-    htmlStr = htmlStr.replaceAll("\\?resource=", resUriPath);
+    String htmlStr = htmlRes.toString().replaceAll("\\?resource=", resUriPath);
 
     JSONObject json = new JSONObject()
         .put("html",  htmlStr)
@@ -969,28 +968,6 @@ public class Main
       res.put(ref.replaceFirst("^.*/", ""), "?path=components/"+rel);
     }
     return res;
-  }
-
-  public static String processComponentHtml(String text, String className) {
-    String result = text;
-
-    // Add the unique component css class to the component outermost
-    // element.
-
-    // the first opening html tag
-    String tmp = result.substring(0, result.indexOf('>'));
-
-    // add the component magic classes to the tag
-    if (tmp.matches(".*['\"\\s]class\\s*=\\s*['\"].*"))
-      result = 
-        result.replaceFirst("^(.*class\\s*=\\s*.)", "$1component " + 
-            className + " ");
-    else
-      result = 
-        result.replaceFirst("(<[a-zA-Z]+)", "$1 class=\"component " + 
-            className + "\"");
-
-    return result;
   }
 
   public static String processComponentCss(String text, String className,
