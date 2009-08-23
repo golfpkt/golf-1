@@ -888,31 +888,21 @@ public class Main
     File   cwd       = new File(o.getOpt("approot|proxypath"), DIR_COMPONENTS);
 
     String html = name + ".html";
-    String css  = name + ".css";
-    String js   = name + ".js";
     String res  = name + ".res";
 
     GolfResource htmlRes = new GolfResource(cwd, html);
-    GolfResource cssRes  = new GolfResource(cwd, css);
-    GolfResource jsRes   = new GolfResource(cwd, js);
     File         resDir  = new File(cwd, res);
 
     String htmlStr  = processComponentHtml(htmlRes.toString(), className);
-    String jsStr    = processComponentJs(jsRes.toString(), js);
-    String cssStr   = processComponentCss(cssRes.toString(), className, css);
     JSONObject resObj   = 
       processComponentRes(resDir, cwd, resDir, null);
 
     String resUriPath = "?path=components/"+getRelativePath(resDir, cwd);
 
     htmlStr = htmlStr.replaceAll("\\?resource=", resUriPath);
-    jsStr   =   jsStr.replaceAll("\\?resource=", resUriPath);
-    cssStr  =  cssStr.replaceAll("\\?resource=", resUriPath);
 
     JSONObject json = new JSONObject()
         .put("html",  htmlStr)
-        .put("css",   cssStr)
-        .put("js",    jsStr)
         .put("res",   resObj);
 
     return json;
