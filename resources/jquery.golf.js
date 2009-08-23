@@ -153,22 +153,21 @@ if (serverside) {
         "replaceWith"
       ],
       function(k,v) {
-        $.fn[v] = (function(orig) {
-          return function(a) { 
-            var e = $(a instanceof Component ? a._dom : a);
-            if (! (a instanceof Component))
-              checkForReservedClass(e);
-            $.golf.prepare(e);
-            var ret = orig.call($(this), e);
-            $(e.parent()).each(function() {
-              $(this).removeData("_golf_prepared");
-            });
-            $.golf.jss.mark(this);
-            if (a instanceof Component && a.onAppend)
-              a.onAppend();
-            return $(this);
-          }; 
-        })($.fn[v]);
+        $.fn["_golf_"+v] = $.fn[v];
+        $.fn[v] = function(a) { 
+          var e = $(a instanceof Component ? a._dom : a);
+          if (! (a instanceof Component))
+            checkForReservedClass(e);
+          $.golf.prepare(e);
+          var ret = $.fn["_golf_"+v].call($(this), e);
+          $(e.parent()).each(function() {
+            $(this).removeData("_golf_prepared");
+          });
+          $.golf.jss.mark(this);
+          if (a instanceof Component && a.onAppend)
+            a.onAppend();
+          return $(this);
+        }; 
       }
     );
 
@@ -179,40 +178,39 @@ if (serverside) {
         "toggleClass"
       ],
       function(k,v) {
-        (function(orig) {
-          $.fn[v] = function() {
-            // FIXME need to cover the case of $(thing).removeClass() with no
-            // parameters and when `thing` _has_ a reserved class already
-            var putback = {};
-            var self = this;
-            if (arguments.length) {
-              checkForReservedClass(arguments[0]);
-            } else if (v == "removeClass") {
-              $.map(checkForReservedClass(this, true), function(c) {
-                putback[c] = $.map(self, function(e) {
-                  return $(e).hasClass(c) ? e : null;
-                });
+        $.fn["_golf_"+v] = $.fn[v];
+        $.fn[v] = function() {
+          // FIXME need to cover the case of $(thing).removeClass() with no
+          // parameters and when `thing` _has_ a reserved class already
+          var putback = {};
+          var self = this;
+          if (arguments.length) {
+            checkForReservedClass(arguments[0]);
+          } else if (v == "removeClass") {
+            $.map(checkForReservedClass(this, true), function(c) {
+              putback[c] = $.map(self, function(e) {
+                return $(e).hasClass(c) ? e : null;
               });
-            }
-            var ret = orig.apply(this, arguments);
-            for (var i in putback)
-              for (var j in putback[i])
-                $(putback[i][j]).addClass(i);
-            $.golf.jss.mark(this);
-            return ret;
-          };
-        })($.fn[v]);
+            });
+          }
+          var ret = $.fn["_golf_"+v].apply(this, arguments);
+          for (var i in putback)
+            for (var j in putback[i])
+              $(putback[i][j])._golf_addClass(i);
+          $.golf.jss.mark(this);
+          return ret;
+        };
       }
     );
 
-    $.fn.golfcss = $.fn.css;
+    $.fn._golf_css = $.fn.css;
     $.fn.css = function() {
       var log = this.data("_golf_css_log") || {};
 
       if (arguments.length > 0) {
         if (typeof arguments[0] == "string") {
           if (arguments.length == 1)
-            return this.golfcss(arguments[0]);
+            return this._golf_css(arguments[0]);
           else
             log[arguments[0]] = arguments[1];
         } else {
@@ -224,7 +222,7 @@ if (serverside) {
             delete log[i];
 
         this.data("_golf_css_log", log);
-        var ret = this.golfcss(arguments[0], arguments[1]);
+        var ret = this._golf_css(arguments[0], arguments[1]);
         $.golf.jss.mark(this);
         return ret;
       }
@@ -419,10 +417,10 @@ $.golf = {
         function() {
           var jself = $(this);
           for (var i in jself.data("_golf_jss_log"))
-            jself.golfcss(i, "");
+            jself._golf_css(i, "");
           jself.data("_golf_jss_log", {});
           jself.data("_golf_jss_spc", {});
-          jself.golfcss(jself.data("_golf_css_log"));
+          jself._golf_css(jself.data("_golf_css_log"));
         }
       );
 
@@ -471,11 +469,11 @@ $.golf = {
                 $.extend(jself.data("_golf_jss_spc"), log);
                 $.extend(jself.data("_golf_jss_log"), attrs);
 
-                jself.golfcss(attrs);
+                jself._golf_css(attrs);
                 
                 log = jself.data("_golf_css_log");
                 for (i in log)
-                  jself.golfcss(jself.data("_golf_css_log"));
+                  jself._golf_css(jself.data("_golf_css_log"));
               }
             );
           }
@@ -547,7 +545,10 @@ $.golf = {
   },
 
   addComponent: function(data, name) {
-    var html = $("<div>"+data+"</div>");
+    var html = $("<div/>")._golf_append(
+      $(data)._golf_addClass("component")
+             ._golf_addClass(name.replace(".", "-"))
+    );
     var css  = html.find("style[type='text/golf']").remove().text();
     var js   = html.find("script[type='text/golf']").remove().text();
     var cmp  = { 
