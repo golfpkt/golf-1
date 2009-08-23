@@ -292,10 +292,14 @@ $.require = function(name, obj) {
   var js        = $.golf.plugins[name].js;
   var exports   = {};
   var target    = obj || window;
+
+  if (!$.golf.singleton[name])
+    $.golf.singleton[name] = {};
+
   try {
-    (function(js,exports) {
+    (function(js,exports,singleton) {
       eval(js)
-    }).call(target,js,exports);
+    }).call(target,js,exports,$.golf.singleton[name]);
   } catch (x) {
     d("can't do require("+name+"): "+x);
   }
@@ -317,6 +321,8 @@ $.golf = {
   loaded: false,
 
   events: [],
+
+  singleton: {},
 
   location: function(hash) {
     $.address.value(hash);
@@ -574,14 +580,19 @@ $.golf = {
     
     d("Setting up components now.");
 
+    d("Loading components/ directory...");
+    for (name in $.golf.components)
+      $.golf.addComponent($.golf.components[name].html, name);
+
     d("Loading styles/ directory...");
+    $("head style").remove();
     for (name in $.golf.styles)
       $("head").append(
         "<style type='text/css'>"+$.golf.styles[name].css+"</style>");
 
-    d("Loading components/ directory...");
-    for (name in $.golf.components)
-      $.golf.addComponent($.golf.components[name].html, name);
+    // in proxy mode we can't reload scripts really
+    if ($.golf.loaded)
+      return;
 
     d("Loading scripts/ directory...");
     for (name in $.golf.scripts)
@@ -594,9 +605,6 @@ $.golf = {
       $.globalEval($.golf.scripts[scripts[i]].js);
 
     d("Done loading directories...");
-    // FIXME: hunit weirdness workaround
-    $.golf.setupComponents = function() {};
-
     $.golf.loaded = true;
   },
 
@@ -658,7 +666,7 @@ $.golf = {
         match = theName.match(pat);
         if (match) {
           theAction = $.golf.controller[i].action;
-          if (theAction(b, match)===false)
+          if (theAction(b, match)!==true)
             break;
           theAction = null;
         }
@@ -731,10 +739,14 @@ $.golf = {
         var js        = $.golf.plugins[name].js;
         var exports   = {};
         var target    = obj || window;
+
+        if (!$.golf.singleton[name])
+          $.golf.singleton[name] = {};
+
         try {
-          (function(jQuery,$,js,exports) {
+          (function(jQuery,$,js,exports,singleton) {
             eval(js)
-          }).call(target,$fake,$fake,js,exports);
+          }).call(target,$fake,$fake,js,exports,$.golf.singleton[name]);
         } catch (x) {
           d("can't require("+name+"): "+x);
         }
