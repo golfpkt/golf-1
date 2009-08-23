@@ -250,10 +250,11 @@ public class GolfServlet extends HttpServlet {
       }
 
       // this is why this should be a singleton!
-      if (p.getReload() != null && ! p.getReload().booleanValue()) {
+      if (p.getReload() != null && p.getReload().booleanValue()) {
+        log(this, LOG_INFO, "RELOAD via query parameter");
         request.getSession(true).invalidate();
         mJsvms.remove(request.getSession().getId());
-        throw new RedirectException(response.encodeRedirectURL(servletUrl));
+        throw new RedirectException(servletUrl);
       }
 
       String origRequestUrl = servletUrl;
