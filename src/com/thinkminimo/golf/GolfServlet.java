@@ -139,6 +139,14 @@ public class GolfServlet extends HttpServlet {
     public void setForceProxy(Boolean value) {
       set("forceproxy", String.valueOf(value));
     }
+    public Boolean getForceBot() {
+      return get("forceproxy") == null 
+                ? null 
+                : Boolean.parseBoolean(get("forcebot"));
+    }
+    public void setForceBot(Boolean value) {
+      set("forcebot", String.valueOf(value));
+    }
   }
 
   private class GolfParams {
@@ -312,6 +320,7 @@ public class GolfServlet extends HttpServlet {
   private static AtomicBoolean        mBotMutex     = new AtomicBoolean();
   private static ArrayList<String>    mForceProxy   = new ArrayList<String>();
   private static ArrayList<String>    mForceClient  = new ArrayList<String>();
+  private static ArrayList<String>    mForceBot     = new ArrayList<String>();
 
   /**
    * @see javax.servlet.Servlet#init(javax.servlet.ServletConfig)
@@ -438,6 +447,10 @@ public class GolfServlet extends HttpServlet {
           (new GolfResource(getServletContext(), Main.FORCECLIENT_TXT))
             .toArrayList();
 
+        mForceBot =
+          (new GolfResource(getServletContext(), Main.FORCEBOT_TXT))
+            .toArrayList();
+
       } catch (FileNotFoundException fx) {
       } finally {
         mBotMutex.set(false);
@@ -513,6 +526,18 @@ public class GolfServlet extends HttpServlet {
       // the url fragment (shenanigans here)
       page = page.replaceFirst("(window.urlHash +=) \"[a-zA-Z_]+\";", 
           "$1 \"" + context.urlHash + "\";");
+      
+      // bot mode forced?
+      page = page.replaceFirst("(window.forcebot +=) [a-zA-Z_]+;", 
+          "$1 " + context.s.getForceBot().toString() + ";");
+      
+      // proxy mode forced?
+      page = page.replaceFirst("(window.forceproxy +=) [a-zA-Z_]+;", 
+          "$1 " + context.s.getForceProxy().toString() + ";");
+      
+      // client mode forced?
+      page = page.replaceFirst("(window.forceclient +=) [a-zA-Z_]+;", 
+          "$1 " + context.s.getForceClient().toString() + ";");
     }
 
     // no dtd for serverside because it breaks the xml parser
@@ -765,6 +790,7 @@ public class GolfServlet extends HttpServlet {
     HttpSession session     = context.request.getSession();
     String      remoteAddr  = context.request.getRemoteAddr();
     String      sessionAddr = context.s.getIpAddr();
+    Boolean     forcebot    = context.s.getForceBot();
     Boolean     forceproxy  = context.s.getForceProxy();
     Boolean     forceclient = context.s.getForceClient();
     Boolean     forceParam  = context.p.getForce();
@@ -781,12 +807,24 @@ public class GolfServlet extends HttpServlet {
       context.s.setForceClient(forceclient = null);
     }
 
+    // forcebot: Match regex to user agent string.
+    // If match, treat user agent as a bot (no css,
+    // no presentation cruft, cleaner markup).
+
+    // FIXME: store this info in session unless in devmode, maybe
+    if (forcebot == null) {
+      forcebot = multipatternMatch(uagent, mForceBot);
+      context.s.setForceBot(forcebot);
+    }
+    
     // forceproxy: Match regex to user agent string.
-    // If match, force proxy mode immediately.
+    // If match, force proxy mode immediately. Forcebot
+    // implies forceproxy.
 
     // FIXME: store this info in session unless in devmode, maybe
     if (forceproxy == null) {
-      if (forceproxy = multipatternMatch(uagent, mForceProxy)) {
+      if (forceproxy = 
+          (multipatternMatch(uagent, mForceProxy) || forcebot)) {
         context.s.setJs(false);
         context.s.setSeq(1);
       }
@@ -794,8 +832,8 @@ public class GolfServlet extends HttpServlet {
     }
 
     // forceclient: Match regex to user agent string.
-    // If match, force client mode immediately.
-    // This is overridden by forceproxy, though.
+    // If match, force client mode immediately, unless
+    // forceproxy is set (forceproxy has higher precedence).
 
     // FIXME: store this info in session unless in devmode, maybe
     if (forceclient == null) {

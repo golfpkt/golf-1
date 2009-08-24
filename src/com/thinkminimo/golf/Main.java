@@ -89,6 +89,7 @@ public class Main
   public    static final String       JQUERY_HIST_JS  = "jquery.address.js";
   public    static final String       FORCEPROXY_TXT  = "forceproxy.txt";
   public    static final String       FORCECLIENT_TXT = "forceclient.txt";
+  public    static final String       FORCEBOT_TXT    = "forcebot.txt";
   public    static final String       NOSCRIPT_HTML   = "noscript.html";
   public    static final String       NOSCRIPT_FC_HTML= "noscript.forceclient.html";
   public    static final String       LOADING_GIF     = "loading.gif";
@@ -797,6 +798,7 @@ public class Main
       NOSCRIPT_HTML,
       FORCEPROXY_TXT,
       FORCECLIENT_TXT,
+      FORCEBOT_TXT,
       COMPONENTS_JS,
       CONTROLLER_JS
     }) json.remove(s);
