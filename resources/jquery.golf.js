@@ -388,7 +388,6 @@ $.golf = {
         d("WARN: can't do mark: "+x);
         return;
       }
-      d("mark()");
 
       cpdom.data("_golf_jss_dirty", true);
       setTimeout(function() { $.golf.jss.doit(elem) }, 10);
@@ -417,7 +416,6 @@ $.golf = {
         d("WARN: can't do jss: "+x);
         return;
       }
-      d("doit()");
 
       $local("*", cpdom).each(
         function() {
@@ -551,12 +549,19 @@ $.golf = {
   },
 
   addComponent: function(data, name) {
+    var js = 
+      data
+        .replace(/^(.|\n)*<script +type *= *("text\/golf"|'text\/golf')>/, "")
+        .replace(/<\/script>(.|\n)*$/, "");
+    var css = 
+      data
+        .replace(/^(.|\n)*<style +type *= *("text\/golf"|'text\/golf')>/, "")
+        .replace(/<\/style>(.|\n)*$/, "");
     var html = $("<div/>")._golf_append(
       $(data)._golf_addClass("component")
              ._golf_addClass(name.replace(".", "-"))
     );
-    var css  = html.find("style[type='text/golf']").remove().text();
-    var js   = html.find("script[type='text/golf']").remove().text();
+    html.find("style[type='text/golf'],script[type='text/golf']").remove();
     var cmp  = { 
       "name"  : name,
       "html"  : html.html(),
@@ -683,24 +688,16 @@ $.golf = {
 
   prepare: function(p) {
     $("*", p.parent()).each(function() { 
-        var jself = $(this);
+      var jself = $(this);
 
-        if (jself.data("_golf_prepared"))
-          return;
+      if (jself.data("_golf_prepared"))
+        return;
 
-        jself.data("_golf_prepared", true);
+      jself.data("_golf_prepared", true);
 
-        // makes hrefs in links work in both client and proxy modes
-        if (this.tagName == "A")
-          jself.href(this.href);
-
-        // this is for the jss "transaction log"
-        $.each([ "_golf_jss_log", "_golf_css_log", "_golf_jss_spc" ], 
-          function(k,v) {
-            if (!jself.data(v))
-              jself.data(v, {});
-          }
-        );
+      // makes hrefs in links work in both client and proxy modes
+      if (this.tagName == "A")
+        jself.href(this.href);
     });
     return p;
   },
