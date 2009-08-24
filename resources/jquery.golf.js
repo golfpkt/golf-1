@@ -18,7 +18,7 @@ function $local(selector, root) {
 }
 
 function checkForReservedClass(elems, shutup) {
-  if (! $.golf.reservedClassChecking)
+  if (! $.golf.reservedClassChecking || window.forcebot)
     return [];
   var RESERVED_CLASSES = [ "component", "golfbody", "golfproxylink" ];
   var badclass = (
@@ -397,7 +397,7 @@ $.golf = {
     doit: function(elem, force) {
       var cpdom, cpname, data, parsed;
 
-      if (serverside && !force)
+      if ((serverside && !force) || window.forcebot)
         return;
 
       try {
