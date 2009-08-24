@@ -287,19 +287,25 @@ $.Import = function(name) {
 };
 
 $.require = function(name, obj) {
-  var js        = $.golf.plugins[name].js;
-  var exports   = {};
-  var target    = obj || window;
+  var js, exports, target;
 
-  if (!$.golf.singleton[name])
-    $.golf.singleton[name] = {};
-
+  d("require('"+name+"')");
   try {
+    if (!$.golf.plugins[name])
+      throw "not found";
+
+    js        = $.golf.plugins[name].js;
+    exports   = {};
+    target    = obj || window;
+
+    if (!$.golf.singleton[name])
+      $.golf.singleton[name] = {};
+
     (function(js,exports,singleton) {
       eval(js)
     }).call(target,js,exports,$.golf.singleton[name]);
   } catch (x) {
-    d("can't do require("+name+"): "+x);
+    d("can't require("+name+"): "+x);
   }
   return exports;
 };
@@ -572,13 +578,6 @@ $.golf = {
   setupComponents: function() {
     var cmp, name, i, m, scripts=[];
 
-    // wait for all to be loaded before proceeding.
-    if (! "styles" in $.golf || ! "components" in $.golf ||
-      ! "scripts" in $.golf || ! "plugins" in $.golf) {
-      setTimeout(setupComponents, 100);
-      return;
-    }
-    
     d("Setting up components now.");
 
     d("Loading components/ directory...");
@@ -737,14 +736,20 @@ $.golf = {
       $fake.component = cmp;
 
       $fake.require = function(name, obj) {
-        var js        = $.golf.plugins[name].js;
-        var exports   = {};
-        var target    = obj || window;
+        var js, exports, target;
 
-        if (!$.golf.singleton[name])
-          $.golf.singleton[name] = {};
-
+        d("require('"+name+"')");
         try {
+          if (!$.golf.plugins[name])
+            throw "not found";
+
+          js        = $.golf.plugins[name].js;
+          exports   = {};
+          target    = obj || window;
+
+          if (!$.golf.singleton[name])
+            $.golf.singleton[name] = {};
+
           (function(jQuery,$,js,exports,singleton) {
             eval(js)
           }).call(target,$fake,$fake,js,exports,$.golf.singleton[name]);
@@ -773,13 +778,7 @@ $.golf = {
 };
 
 $(function() {
-  function loadme() {  
-    if (!$.golf.loaded)
-      setTimeout(loadme, 100);
-    else
-      $.golf.onLoad();
-  }
-  loadme();
+  $.golf.onLoad();
 });
 
 })(jQuery);
