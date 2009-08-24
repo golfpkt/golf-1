@@ -361,10 +361,6 @@ public class GolfServlet extends HttpServlet {
       // initialize context
       context.init();
 
-      // refresh cache in devmode
-      if (Boolean.parseBoolean(mDevMode))
-        cacheStaticFiles();
-
       String url = context.request.getRequestURL().toString()
         .replaceFirst(";jsessionid=.*$", "");
 
@@ -780,6 +776,7 @@ public class GolfServlet extends HttpServlet {
       throw new Exception("sid is null");
 
     if (Boolean.parseBoolean(mDevMode)) {
+      cacheStaticFiles();
       context.s.setForceProxy(forceproxy = null);
       context.s.setForceClient(forceclient = null);
     }
