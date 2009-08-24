@@ -43,41 +43,41 @@ window.Component  = Component;
 
 if (serverside) {
 
-  $.fx.off = true;
+  if (!window.forcebot) {
+    $.fx.off = true;
 
-  $.fn.fadeIn = $.fn.slideDown = function(speed, callback) {
-    return $.fn.show.call(this, 0, callback);
-  };
-
-  $.fn.fadeOut = $.fn.slideUp = function(speed, callback) {
-    return $.fn.hide.call(this, 0, callback);
-  };
-
-  // this is problematic because the js css manipulations are not carried
-  // over in proxy mode; needs to be in a style tag maybe
-  //(function(fadeTo) {
-  //  jQuery.fn.fadeTo = function(speed, opacity, callback) {
-  //    return fadeTo.call(this, 0, opacity, callback);
-  //  };
-  //})(jQuery.fn.fadeTo);
-
-  $.fn.slideToggle = function(speed, callback) {
-    return $.fn.toggle.call(this, 0, callback);
-  };
-
-  (function(show) {
-    $.fn.show = function(speed, callback) {
-      return show.call(this, 0, callback);
+    $.fn.fadeIn = $.fn.slideDown = function(speed, callback) {
+      return $.fn.show.call(this, 0, callback);
     };
-  })($.fn.show);
 
-  (function(hide) {
-    $.fn.hide = function(speed, callback) {
-      return hide.call(this, 0, callback);
+    $.fn.fadeOut = $.fn.slideUp = function(speed, callback) {
+      return $.fn.hide.call(this, 0, callback);
     };
-  })($.fn.hide);
 
-  (function() {
+    // this is problematic because the js css manipulations are not carried
+    // over in proxy mode; needs to be in a style tag maybe
+    //(function(fadeTo) {
+    //  jQuery.fn.fadeTo = function(speed, opacity, callback) {
+    //    return fadeTo.call(this, 0, opacity, callback);
+    //  };
+    //})(jQuery.fn.fadeTo);
+
+    $.fn.slideToggle = function(speed, callback) {
+      return $.fn.toggle.call(this, 0, callback);
+    };
+
+    $.fn.show = (function(show) {
+      return function(speed, callback) {
+        return show.call(this, 0, callback);
+      };
+    })($.fn.show);
+
+    $.fn.hide = (function(hide) {
+      return function(speed, callback) {
+        return hide.call(this, 0, callback);
+      };
+    })($.fn.hide);
+
     $.fn.bind = (function(bind) {
       var lastId = 0;
       return function(name, fn) {
@@ -120,24 +120,24 @@ if (serverside) {
         }
       };
     })($.fn.trigger);
+  }
 
-    $.fn.val = (function(val) {
-      return function(newVal) {
-        if (arguments.length == 0)
-          return $.trim(val.call($(this)));
-        else
-          return val.call($(this), newVal);
-      };
-    })($.fn.val);
+  $.fn.val = (function(val) {
+    return function(newVal) {
+      if (arguments.length == 0)
+        return $.trim(val.call($(this)));
+      else
+        return val.call($(this), newVal);
+    };
+  })($.fn.val);
 
-    $.ajax = (function(ajax) {
-      return function(options) {
-        options.async = false;
-        return ajax(options);
-      };
-    })($.ajax);
+  $.ajax = (function(ajax) {
+    return function(options) {
+      options.async = false;
+      return ajax(options);
+    };
+  })($.ajax);
 
-  })();
 }
 
 // install overrides on jQ DOM manipulation methods to accomodate components
