@@ -102,7 +102,7 @@ if (serverside) {
           }
           $.golf.events[jself.attr("golfid")].push(fn);
         }
-        return bind.call($(this), name, fn);
+        return bind.call(jself, name, fn);
       };
     })($.fn.bind);
 
@@ -584,13 +584,18 @@ $.golf = {
     for (name in $.golf.components)
       $.golf.addComponent($.golf.components[name].html, name);
 
-    d("Loading styles/ directory...");
-    $("head style").remove();
-    for (name in $.golf.styles)
-      $("head").append(
-        "<style type='text/css'>"+$.golf.styles[name].css+"</style>");
+    if (!window.forcebot) {
+      d("Loading styles/ directory...");
+      $("head style").remove();
+      for (name in $.golf.styles)
+        $("head").append(
+          "<style type='text/css'>"+$.golf.styles[name].css+"</style>");
+    } else {
+      $("head style").remove();
+    }
 
-    // in proxy mode we can't reload scripts really
+    // in proxy mode we can't reload scripts really because we
+    // can't expect them to be idempotent
     if ($.golf.loaded)
       return;
 

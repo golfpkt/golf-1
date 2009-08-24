@@ -510,6 +510,13 @@ public class GolfServlet extends HttpServlet {
                                 .replaceAll("\n", "") // FIXME this is sketchy
           + page.substring(j);
       }
+
+      if (context.s.getForceBot().booleanValue()) {
+        page = page.replaceAll("(<[^>]+) style=\"[^\"]*\"", "$1");
+        page = page.replaceAll("(<[^>]+) style='[^']*'",    "$1");
+        page = page.replaceAll("(<[^>]+) class=\"[^\"]*\"", "$1");
+        page = page.replaceAll("(<[^>]+) class='[^']*'",    "$1");
+      }
     } else {
       // on the client window.serverside must be false, and vice versa
       page = page.replaceFirst("(window.serverside +=) [a-zA-Z_]+;", 
