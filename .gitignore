@@ -6,6 +6,7 @@ docs/api
 *.swo
 *.war
 *~
+.DS_Store
 hs_err_pid*
 components.js
 new.fc.html
