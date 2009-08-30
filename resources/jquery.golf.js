@@ -724,10 +724,16 @@ $.golf = {
         $fake.fn.init = function(selector) {
           var isHtml = /^[^<]*(<(.|\s)+>)[^>]*$/;
 
-          // if it's not a selector then passthru to jQ
+          // if it's a function then immediately execute it (DOM loading
+          // is guaranteed to be complete by the time this runs)
+          if ($.isFunction(selector))
+            return selector();
+
+          // if it's not a css selector then passthru to jQ
           if (typeof selector != "string" || selector.match(isHtml))
             return new orig(selector);
 
+          // it's a css selector
           return new orig(obj._dom)
                     .find(selector)
                     .not($(".component *", obj._dom).get())
@@ -753,7 +759,21 @@ $.golf = {
             $.golf.singleton[name] = {};
 
           (function(jQuery,$,js,exports,singleton) {
-            eval(js)
+            if (name.match(/^jquery\./)) {
+              var mustLoad=true;
+              for (i in singleton) {
+                mustLoad=false;
+                break;
+              }
+              if (mustLoad) {
+                d("require: loading singleton");
+                eval("exports.init = function($,jQuery) { "+js+" }");
+                $.extend(true, singleton, exports);
+              }
+              singleton.init($,$);
+            } else {
+              eval(js)
+            }
           }).call(target,$fake,$fake,js,exports,$.golf.singleton[name]);
         } catch (x) {
           d("can't require("+name+"): "+x);
