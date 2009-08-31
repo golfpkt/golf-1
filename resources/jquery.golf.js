@@ -286,30 +286,6 @@ $.Import = function(name) {
   return ret;
 };
 
-$.require = function(name, obj) {
-  var js, exports, target;
-
-  d("require('"+name+"')");
-  try {
-    if (!$.golf.plugins[name])
-      throw "not found";
-
-    js        = $.golf.plugins[name].js;
-    exports   = {};
-    target    = obj || window;
-
-    if (!$.golf.singleton[name])
-      $.golf.singleton[name] = {};
-
-    (function(js,exports,singleton) {
-      eval(js)
-    }).call(target,js,exports,$.golf.singleton[name]);
-  } catch (x) {
-    d("can't require("+name+"): "+x);
-  }
-  return exports;
-};
-
 // main jQ golf object
 
 $.golf = {
@@ -702,6 +678,39 @@ $.golf = {
     return p;
   },
 
+  require: function($fake) {
+    return function(name, options) {
+      var js, exports, target;
+
+      try {
+        if (!$.golf.plugins[name])
+          throw "not found";
+
+        js        = $.golf.plugins[name].js;
+        exports   = {};
+        target    = this;
+
+        if (!$.golf.singleton[name])
+          $.golf.singleton[name] = {};
+
+        (function(jQuery,$,js,exports,singleton,options) {
+          if (!singleton._init) {
+            d("require: loading '"+name+"'");
+            eval("exports._init = "+
+              "function($,jQuery,exports,singleton) { "+js+" }");
+            $.extend(true, singleton, exports);
+          } else {
+            d("require: loading '"+name+"' from cache");
+          }
+          singleton._init($,$,exports,singleton);
+        }).call(target,$fake,$fake,js,exports,$.golf.singleton[name],options);
+      } catch (x) {
+        d("can't require("+name+"): "+x);
+      }
+      return exports;
+    };
+  },
+
   componentConstructor: function(name) {
     var result = function() {
       var argv = Array.prototype.slice.call(arguments);
@@ -710,7 +719,8 @@ $.golf = {
 
       d("Instantiating component '"+$.golf.components[name].name+"'");
 
-      // the component-localized jQuery engine
+      // $fake: the component-localized jQuery
+
       var $fake = function( selector, context ) {
         return new $fake.fn.init( selector, context );
       };
@@ -743,46 +753,10 @@ $.golf = {
 
       $fake.component = cmp;
 
-      $fake.require = function(name, obj) {
-        var js, exports, target;
-
-        d("require('"+name+"')");
-        try {
-          if (!$.golf.plugins[name])
-            throw "not found";
-
-          js        = $.golf.plugins[name].js;
-          exports   = {};
-          target    = obj || window;
-
-          if (!$.golf.singleton[name])
-            $.golf.singleton[name] = {};
-
-          (function(jQuery,$,js,exports,singleton) {
-            if (name.match(/^jquery\./)) {
-              var mustLoad=true;
-              for (i in singleton) {
-                mustLoad=false;
-                break;
-              }
-              if (mustLoad) {
-                d("require: loading singleton");
-                eval("exports.init = function($,jQuery) { "+js+" }");
-                $.extend(true, singleton, exports);
-              }
-              singleton.init($,$);
-            } else {
-              eval(js)
-            }
-          }).call(target,$fake,$fake,js,exports,$.golf.singleton[name]);
-        } catch (x) {
-          d("can't require("+name+"): "+x);
-        }
-        return exports;
-      };
+      $fake.require = $.golf.require($fake);
 
       if (cmp) {
-        obj._dom = $(cmp.html);
+        obj._dom = cmp.dom.clone();
         obj._dom.data("_golf_constructing", true);
         checkForReservedClass(obj._dom.children().find("*"));
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
@@ -798,6 +772,8 @@ $.golf = {
   }
 
 };
+
+$.require = $.golf.require($);
 
 $(function() {
   $.golf.onLoad();
