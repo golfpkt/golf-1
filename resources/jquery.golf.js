@@ -758,6 +758,7 @@ $.golf = {
       if (cmp) {
         obj._dom = cmp.dom.clone();
         obj._dom.data("_golf_constructing", true);
+        obj.require = $fake.require;
         checkForReservedClass(obj._dom.children().find("*"));
         $.golf.doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
         obj._dom.removeData("_golf_constructing");
