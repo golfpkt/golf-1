@@ -844,7 +844,7 @@ public class Main
         if (path.endsWith(".js")) {
           String cmpName = path.replaceFirst("\\.js$", "");
           String keyName = 
-            cmpName.replaceFirst("^[a-z]+/+", "").replace("/", ".");
+            cmpName.replaceFirst("^[a-z]+/+", "");
           json.put(keyName, processScript(cmpName).put("name", keyName));
         }
       } else if (file.isDirectory()) {
