@@ -310,7 +310,7 @@ public class JavaScriptCompressor {
         CompilerEnvirons env = new CompilerEnvirons();
         Parser parser = new Parser(env, reporter);
         parser.parse(in, null, 1);
-        String source = parser.getEncodedSource();
+        String source = ""; //FIXME parser.getEncodedSource();
 
         int offset = 0;
         int length = source.length();
