@@ -507,6 +507,7 @@ public class GolfServlet extends HttpServlet {
           + page.substring(i, j).replaceAll("&gt;", ">") 
                                 .replaceAll("&lt;", "<")
                                 .replaceAll("&amp;", "&")
+                                .replaceAll("&apos;", "'")
                                 .replaceAll("\n", "") // FIXME this is sketchy
           + page.substring(j);
       }
