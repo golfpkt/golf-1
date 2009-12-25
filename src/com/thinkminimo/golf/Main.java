@@ -818,8 +818,8 @@ public class Main
       if (file.isFile()) {
         if (path.endsWith(".html")) {
           String cmpName = path.replaceFirst("\\.html$", "");
-          String keyName = cmpName.replaceFirst("^/+", "").replace("/", ".");
-          json.put(keyName, processComponent(cmpName).put("name", keyName));
+          JSONObject cmpJson = processComponent(cmpName);
+          json.put((String) cmpJson.get("name"), cmpJson);
         }
       } else if (file.isDirectory() && !file.getName().endsWith(".res")) {
         for (String f : file.list()) {
@@ -886,7 +886,9 @@ public class Main
 
   public static JSONObject processComponent(String name) throws Exception {
     name = name.replaceFirst("^/+", "");
-    String className = name.replace('/', '-');
+    String shortName = name.replaceFirst("(^|/)[^/]+/([^/]+)$", "$1$2");
+    String className = shortName.replace('/', '-');
+    String classPath = shortName.replace('/', '.');
     File   cwd       = new File(o.getOpt("approot|proxypath"), DIR_COMPONENTS);
 
     String html = name + ".html";
@@ -903,6 +905,7 @@ public class Main
     String htmlStr = htmlRes.toString().replaceAll("\\?resource=", resUriPath);
 
     JSONObject json = new JSONObject()
+        .put("name",  classPath)
         .put("html",  htmlStr)
         .put("res",   resObj);
 
