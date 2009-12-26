@@ -1,5 +1,6 @@
 build/*
 dist/*
+_site/*
 docs/api/*
 docs/api
 *.swp
