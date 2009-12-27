@@ -6,7 +6,7 @@ Please see [http://golf.github.com/](http://golf.github.com/).
 Building The Golf Jar File From Source
 ======================================
 
-(Pre-compiled binaries are available under the Downloads tab above.)
+  (Pre-compiled binaries are available from [http://cloud.github.com/downloads/micha/golf/golf-latest.jar](http://cloud.github.com/downloads/micha/golf/golf-latest.jar).)
 
 0. Clone the git repo.
 
