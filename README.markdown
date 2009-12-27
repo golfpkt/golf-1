@@ -15,5 +15,5 @@ Building The Golf Jar File From Source
         $ cd <repo directory>
         $ ant
 
-2. The jar file will be in the @dist/@ directory.
+2. The jar file will be in the `dist/` directory.
 
