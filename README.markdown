@@ -1,7 +1,7 @@
 Documentation
 =============
 
-Please see (http://golf.github.com/).
+Please see [http://golf.github.com/](http://golf.github.com/).
 
 Building The Golf Jar File From Source
 ======================================
