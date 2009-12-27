@@ -149,7 +149,7 @@
 java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
 </echo>
     <chmod file="${build.home}/golf" perm="ugo+rx"/>
-    <zip destfile="${dist.home}/${app.fullname}.zip">
+    <zip destfile="${dist.home}/golf.zip">
       <zipfileset file="${jarfile.dist}"/>
       <zipfileset file="${build.home}/golf" filemode="755"/>
     </zip>
