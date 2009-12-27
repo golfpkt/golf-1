@@ -38,7 +38,7 @@ function checkForReservedClass(elems, shutup) {
 }
 
 window.d          = Debug("GOLF");
-//window.Debug      = Component;
+window.Debug      = Component;
 window.Component  = Component;
 
 if (serverside) {
