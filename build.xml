@@ -145,11 +145,13 @@
 
   <target name="dist" depends="jar,javadoc"
     description="Create binary distribution.">
+<echo file="${build.home}/golf">#!/usr/bin/env bash
+java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
+</echo>
+    <chmod file="${build.home}/golf" perm="ugo+rx"/>
     <zip destfile="${dist.home}/${app.fullname}.zip">
-      <zipfileset file="${jarfile.dist}"    prefix="${app.fullname}"/>
-      <zipfileset dir="${docs.home}"        prefix="${app.fullname}/docs">
-        <exclude name="api/**"/>
-      </zipfileset>
+      <zipfileset file="${jarfile.dist}"/>
+      <zipfileset file="${build.home}/golf" filemode="755"/>
     </zip>
   </target>
 
