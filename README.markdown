@@ -3,8 +3,13 @@ Documentation
 
 Please see [http://golf.github.com/](http://golf.github.com/).
 
-Building Golf From Source
-=========================
+Pre-built Binaries
+==================
+
+Download them from [here](http://github.com/golf/golf/downloads).
+
+Build From Source
+=================
 
 0. Clone the git repo.
 
