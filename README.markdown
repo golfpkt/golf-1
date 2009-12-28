@@ -3,17 +3,20 @@ Documentation
 
 Please see [http://golf.github.com/](http://golf.github.com/).
 
-Building The Golf Jar File From Source
-======================================
-
-  (Pre-compiled binaries are available from [http://cloud.github.com/downloads/golf/golf/golf-latest.jar](http://cloud.github.com/downloads/golf/golf/golf-latest.jar).)
+Building Golf From Source
+=========================
 
 0. Clone the git repo.
 
-1. Compile Golf.jar:
+        $ git clone git://github.com/golf/golf.git
+
+1. Compile Golf and produce the `golf.zip` file:
         
-        $ cd <repo directory>
-        $ ant
+        $ cd golf
+        $ ant dist
 
-2. The jar file will be in the `dist/` directory.
+2. The `golf.zip` file will now be in the `dist` directory.
 
+3. Follow the instructions [here](http://golf.github.com/install-golf-on-your-workstation/).
+
+Prebuilt binaries are available in the *Downloads* section of this repo.
