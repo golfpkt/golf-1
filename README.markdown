@@ -23,5 +23,3 @@ Build From Source
 2. The `golf.zip` file will now be in the `dist` directory.
 
 3. Follow the instructions [here](http://golf.github.com/install-golf-on-your-workstation/).
-
-Prebuilt binaries are available in the *Downloads* section of this repo.
