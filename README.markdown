@@ -11,15 +11,22 @@ Download them from [here](http://github.com/golf/golf/downloads).
 Build From Source
 =================
 
-0. Clone the git repo.
+1. Clone the git repo.
 
         $ git clone git://github.com/golf/golf.git
 
-1. Compile Golf and produce the `golf.zip` file:
+2. Compile Golf, produce the `golf.zip` file, and install:
         
         $ cd golf
-        $ ant dist
+        $ ant install
 
-2. The `golf.zip` file will now be in the `dist` directory.
+You will be prompted for a directory to copy the jar file and the wrapper script to. Choose a directory that is in your path. Now you should be able to run Golf.
 
-3. Follow the instructions [here](http://golf.github.com/install-golf-on-your-workstation/).
+        $ golf --help
+
+Javadocs
+========
+
+The javadocs can be generated the usual way:
+
+       $ ant javadoc
