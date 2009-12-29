@@ -20,7 +20,7 @@ Build From Source
         $ cd golf
         $ ant install
 
-You will be prompted for a directory to copy the jar file and the wrapper script to. Choose a directory that is in your path. Now you should be able to run Golf.
+3. You will be prompted for a directory to copy the jar file and the wrapper script to. Choose a directory that is in your path. Now you should be able to run Golf.
 
         $ golf --help
 
