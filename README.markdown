@@ -29,8 +29,6 @@ Build From Source
 
         $ golf --help
 
-###Javadocs###
-
-The javadocs can be generated the usual way:
+4. Javadocs can be generated the usual way:
 
        $ ant javadoc
