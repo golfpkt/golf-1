@@ -1,5 +1,8 @@
 <project name="jtemplate" default="all" basedir=".">
 
+  <!-- load environment variables into the 'env' property -->
+  <property environment="env"/>
+
   <!-- default configuration -->
   <property name="orig.vendor.namespace" 
     value="com.thinkminimo"/>
@@ -143,7 +146,7 @@
     </javadoc>
   </target>
 
-  <target name="dist" depends="jar,javadoc"
+  <target name="dist" depends="jar"
     description="Create binary distribution.">
 <echo file="${build.home}/golf">#!/usr/bin/env bash
 java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
@@ -155,11 +158,14 @@ java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
     </zip>
   </target>
 
-  <target name="google" depends="clean,jar"
-    description="Upload to google code.">
-    <exec executable="googlecode_golf.py">
-      <arg value="${jarfile.dist}"/>
-    </exec>
+  <target name="install" depends="dist">
+    <input defaultvalue="${env.HOME}/bin" 
+      addproperty="get.installdir"
+      message="Install dir?"/>
+    <unzip src="${dist.home}/golf.zip" dest="${dist.home}"/>
+    <chmod file="${dist.home}/golf" perm="755"/>
+    <move file="${jarfile.dist}" todir="${get.installdir}"/>
+    <move file="${dist.home}/golf" todir="${get.installdir}"/>
   </target>
 
 </project>
