@@ -1,3 +1,8 @@
+Golf Web Application Server
+===========================
+
+Golf is a web application server. It provides a way to build and deploy JavaScript (JS) driven webapps without sacrificing accessibility to JS-disabled browsers. By making dynamic, JS generated content fully accessible, Golf apps are designed from the ground up as clientside applications, and take advantage of a powerful, rich JS runtime environment.
+
 Documentation For Golf Web Application Developers
 =================================================
 
