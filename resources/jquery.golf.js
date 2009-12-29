@@ -10,6 +10,8 @@ function Debug(prefix) {
     text = prefix+": "+text;
     if (window.devmode && window.console && window.console.log)
       console.log(text);
+    else if (window.serverside)
+      alert(text);
   };
 }
 
@@ -38,7 +40,7 @@ function checkForReservedClass(elems, shutup) {
 }
 
 window.d          = Debug("GOLF");
-window.Debug      = Component;
+//window.Debug      = Debug;
 window.Component  = Component;
 
 if (serverside) {
