@@ -6,7 +6,7 @@ Please see [http://golf.github.com/](http://golf.github.com/).
 Pre-built Binaries
 ==================
 
-  Download them from [here](http://github.com/golf/golf/downloads). See [http://golf.github.com/install-golf-on-your-workstation/](http://golf.github.com/install-golf-on-your-workstation/).
+Please see [http://golf.github.com/install-golf-on-your-workstation/](http://golf.github.com/install-golf-on-your-workstation/).
 
 Build From Source
 =================
