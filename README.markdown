@@ -1,4 +1,4 @@
-Documentation For Golf Web Applicaiton Developers
+Documentation For Golf Web Application Developers
 =================================================
 
 Please see [http://golf.github.com/](http://golf.github.com/).
