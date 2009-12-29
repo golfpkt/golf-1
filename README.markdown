@@ -32,3 +32,8 @@ Build From Source
 4. Javadocs can be generated the usual way:
 
         $ ant Javadoc
+
+Hack
+----
+
+Please feel free to fork and hack! Pull requests and/or patches are always welcomed. Also, feel free to hit us up in our IRC channel on freenode: [#golfdev](irc://irc.freenode.net/golfdev).
