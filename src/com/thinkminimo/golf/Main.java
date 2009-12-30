@@ -119,6 +119,13 @@ public class Main
     mBackends   = new HashMap<String, String>();
     mCfDomains  = new RingList<String>();
 
+    // process single flag command lines
+
+    if (argv[0].equals("--version")) {
+      System.out.print(getResourceAsString("version"));
+      System.exit(0);
+    } 
+
     // Command line parser setup
 
     o = new GetOpt("golf", argv);
@@ -293,15 +300,7 @@ public class Main
       }
     }
 
-    // process single flag command lines
-
-    if (o.getFlag("version")) {
-      System.out.println("sorry, not implemented.");
-      System.exit(0);
-    } else if (o.getFlag("help")) {
-      usage(null);
-      System.exit(0);
-    }
+    // start work
 
     mAppName = (new File(o.getOpt("approot|proxypath")))
                 .getCanonicalFile().getName().replaceFirst("\\.war$", "");
