@@ -1,6 +1,7 @@
 <project name="golfproject" default="static">
   <target name="static" description="Compile static app.">
     <!-- Compile static app -->
+    <mkdir dir="__OUTFILE__"/>
     <unzip src="__RESOURCES.ZIP__" dest="__OUTFILE__"/>
     <copy todir="__OUTFILE__">
       <fileset dir="__APPROOT__">
@@ -29,5 +30,8 @@
     <delete file="__OUTFILE__/proxy_web.xml"/>
     <delete file="__OUTFILE__/static_project.xml"/>
     <delete file="__OUTFILE__/version"/>
+    <delete>
+      <fileset dir="__OUTFILE__" includes="golf_deploy.*.xml"/>
+    </delete>
   </target>
 </project>
