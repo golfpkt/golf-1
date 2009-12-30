@@ -1,27 +1,23 @@
 <project name="jtemplate" default="all" basedir=".">
 
+  <!-- use defaults unless already set by included configuration files -->
+  <property name="vendor.namespace" value="com.thinkminimo"/>
+  <property name="app.name"         value="golf"/>
+  <property name="app.version.in"   value="0.33"/>
+  <property name="app.release"      value="dev"/>
+  <property name="app.vendor"       value="thinkminimo.com"/>
+
   <!-- load environment variables into the 'env' property -->
   <property environment="env"/>
 
-  <!-- default configuration -->
-  <property name="orig.vendor.namespace" 
-    value="com.thinkminimo"/>
-  <property name="orig.app.name"    value="jtemplate"/>
-  <property name="orig.app.version" value="0.1"/>
-  <property name="orig.app.release" value="dev"/>
-
-  <!-- include user and default configuration files -->
-  <property file="build.properties"/>
-  <property file="default.properties"/>
-
-  <!-- use defaults unless already set by included configuration files -->
-  <property name="vendor.namespace" value="${orig.vendor.namespace}"/>
-  <property name="app.name"         value="${orig.app.name}"/>
-  <property name="app.version"      value="${orig.app.version}"/>
-  <property name="app.release"      value="${orig.app.release}"/>
-
   <!-- set remaining properties -->
-  <property name="app.fullversion"  value="${app.version}-${app.release}"/>
+  <condition property="app.version" value="${app.version.in}" else="0.0">
+    <length string="${app.version.in}" trim="true" when="greater" length="0"/>
+  </condition>
+  <condition property="app.fullversion" 
+    value="${app.version}-${app.release}" else="${app.version}">
+    <length string="${app.release}" trim="true" when="greater" length="0"/>
+  </condition>
 
   <property name="app.base"         value="${vendor.namespace}.${app.name}"/>
   <property name="app.fullname"     value="${app.name}-${app.fullversion}"/>
@@ -34,6 +30,7 @@
   <property name="resources.home"   value="${basedir}/resources"/>
   <property name="ant-scripts.home" value="${basedir}/ant/scripts"/>
 
+  <property name="appversion.dist"  value="${resources.home}/version"/>
   <property name="jarfile.dist"     value="${dist.home}/${app.fullname}.jar"/>
   <property name="warfile.dist"     value="${dist.home}/${app.fullname}.war"/>
   <property name="zipfile.dist"     value="${dist.home}/${app.fullname}.zip"/>
@@ -152,6 +149,7 @@
 java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
 </echo>
     <chmod file="${build.home}/golf" perm="ugo+rx"/>
+    <echo file="${appversion.dist}">${app.fullversion}</echo>
     <zip destfile="${dist.home}/golf.zip">
       <zipfileset file="${jarfile.dist}"/>
       <zipfileset file="${build.home}/golf" filemode="755"/>
