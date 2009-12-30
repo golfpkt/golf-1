@@ -1,0 +1,33 @@
+<project name="golfproject" default="static">
+  <target name="static" description="Compile static app.">
+    <!-- Compile static app -->
+    <unzip src="__RESOURCES.ZIP__" dest="__OUTFILE__"/>
+    <copy todir="__OUTFILE__">
+      <fileset dir="__APPROOT__">
+        <exclude name=".git/**"/>
+        <exclude name=".gitignore"/>
+        <exclude name="**/*.swp"/>
+        <exclude name="**/*.swo"/>
+        <exclude name="**/*~"/>
+      </fileset>
+    </copy>
+    <move file="__OUTFILE__/new.html" tofile="__OUTFILE__/index.html"/>
+    <delete file="__OUTFILE__/new.fc.html"/>
+    <delete file="__OUTFILE__/error.html"/>
+    <delete file="__OUTFILE__/forcebot.txt"/>
+    <delete file="__OUTFILE__/forceproxy.txt"/>
+    <delete file="__OUTFILE__/forceclient.txt"/>
+    <delete file="__OUTFILE__/__WEB.XML__"/>
+    <delete file="__OUTFILE__/head.html"/>
+    <delete file="__OUTFILE__/jsdetect.html"/>
+    <delete file="__OUTFILE__/loading.gif"/>
+    <delete file="__OUTFILE__/new.static.html"/>
+    <delete file="__OUTFILE__/noscript.forceclient.html"/>
+    <delete file="__OUTFILE__/noscript.static.html"/>
+    <delete file="__OUTFILE__/noscript.html"/>
+    <delete file="__OUTFILE__/proxy_project.xml"/>
+    <delete file="__OUTFILE__/proxy_web.xml"/>
+    <delete file="__OUTFILE__/static_project.xml"/>
+    <delete file="__OUTFILE__/version"/>
+  </target>
+</project>

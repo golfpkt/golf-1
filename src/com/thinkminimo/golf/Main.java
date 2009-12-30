@@ -79,6 +79,7 @@ public class Main
 
   public    static final String       NEW_HTML        = "new.html";
   public    static final String       NEW_FC_HTML     = "new.fc.html";
+  public    static final String       NEW_ST_HTML     = "new.static.html";
   public    static final String       ERROR_HTML      = "error.html";
   public    static final String       HEAD_HTML       = "head.html";
   public    static final String       JSDETECT_HTML   = "jsdetect.html";
@@ -92,6 +93,7 @@ public class Main
   public    static final String       FORCEBOT_TXT    = "forcebot.txt";
   public    static final String       NOSCRIPT_HTML   = "noscript.html";
   public    static final String       NOSCRIPT_FC_HTML= "noscript.forceclient.html";
+  public    static final String       NOSCRIPT_ST_HTML= "noscript.static.html";
   public    static final String       LOADING_GIF     = "loading.gif";
 
   public    static final String       DIR_COMPONENTS  = "components";
@@ -157,6 +159,10 @@ public class Main
       "pool-expire",
       "Minimum idle time (seconds) before a proxymode client virtual "+
       "machine can be scavenged."
+    ).addOpt(
+      "static",
+      "Destination directory for a static app deployment. Static apps are "+
+      "compiled into pure HTML+JS. There is no proxy support with this option."
     ).addSection(
       "AMAZON WEB SERVICES CONFIGURATION OPTIONS",
       "The awspublic and awsprivate options provide the golf server with "+
@@ -318,6 +324,8 @@ public class Main
         doProxyWarfile();
       else if (o.getFlag("war"))
         doWarfile();
+      else if (o.getOpt("static") != null)
+        doStatic();
       else
         doServer();
     } catch (Exception e) {
@@ -456,6 +464,74 @@ public class Main
     doAnt();
   }
 
+  private void doStatic() throws Exception {
+    cacheComponentsFile();
+    cacheNewDotHtmlFile();
+    doStaticAnt();
+  }
+
+  private void doServer() throws Exception {
+    o.setOpt("devmode", "true");
+    Server server = new Server(Integer.valueOf(o.getOpt("port")));
+    
+    cacheComponentsFile();
+    cacheNewDotHtmlFile();
+
+    QueuedThreadPool threadPool = new QueuedThreadPool();
+    threadPool.setMaxThreads(100);
+    server.setThreadPool(threadPool);
+
+    ContextHandlerCollection contexts = new ContextHandlerCollection();
+    HandlerList handlers              = new HandlerList();
+    
+    for (String app: mApps.keySet()) {
+      Log.info("Starting app `" + app + "'");
+
+      String docRoot    = mApps.get(app);
+
+      String golfPath   = "/" + app;
+      String golfRoot   = docRoot;
+
+      Context cx1 = new Context(contexts, golfPath, Context.SESSIONS);
+      cx1.setResourceBase(golfRoot);
+      cx1.setDisplayName(o.getOpt("displayname"));
+      ServletHolder sh1 = new ServletHolder(new GolfServlet());
+
+      // manually set init parameters
+      sh1.setInitParameter("devmode",     o.getOpt("devmode"));
+      sh1.setInitParameter("poolsize",    o.getOpt("pool-size"));
+      sh1.setInitParameter("poolexpire",  o.getOpt("pool-expire"));
+
+      cx1.addServlet(sh1, "/*");
+    }
+
+    for (String app: mBackends.keySet()) {
+      Log.info("Starting app `" + app + "'");
+
+      String docRoot    = mBackends.get(app);
+
+      String golfPath   = "/" + app;
+      String golfRoot   = docRoot;
+
+      WebAppContext wac = new WebAppContext();
+      wac.setContextPath(golfPath);
+      wac.setWar(docRoot);
+
+      handlers.addHandler(wac);
+    }
+
+    handlers.addHandler(contexts);
+    handlers.addHandler(new DefaultHandler());
+    //handlers.addHandler(new RequestLogHandler());
+
+    server.setHandler(handlers);
+    server.setStopAtShutdown(true);
+    server.setSendServerVersion(true);
+
+    server.start();
+    server.join();
+  }
+
   public void doProxyAnt(String name, String host, int port, String path)
     throws Exception {
     try {
@@ -496,6 +572,36 @@ public class Main
       project.setUserProperty("ant.file" , ant.getAbsolutePath());
       ProjectHelper.configureProject(project, ant);
       project.executeTarget("war");
+
+      System.err.println("done.");
+    } catch (Exception e) {
+      System.err.println("fail.");
+      throw new Exception(e);
+    }
+  }
+
+  public void doStaticAnt() throws Exception {
+    try {
+      System.err.print("Building static............................");
+
+      File    res     = cacheResourceFile("resources.zip",  ".zip", null);
+      File    ant     = getTmpFile(".xml", new File("."));
+
+      String  antStr  = getResourceAsString("static_project.xml");
+
+      // setup the ant build file
+      antStr =  antStr.replaceAll("__OUTFILE__",        o.getOpt("static"))
+                      .replaceAll("__RESOURCES.ZIP__",  res.getAbsolutePath())
+                      .replaceAll("__APPROOT__",        
+                                    o.getOpt("approot|proxypath"));
+
+      cacheStringFile(antStr, "", ant);
+
+      Project project = new Project();
+      project.init();
+      project.setUserProperty("ant.file" , ant.getAbsolutePath());
+      ProjectHelper.configureProject(project, ant);
+      project.executeTarget("static");
 
       System.err.println("done.");
     } catch (Exception e) {
@@ -699,11 +805,15 @@ public class Main
 
   public static String getNewDotHtmlString(boolean fc) throws Exception {
     File   cwd  = new File(o.getOpt("approot|proxypath"));
+    boolean st  = o.getOpt("static") != null;
 
-    GolfResource  newHtml       = new GolfResource(cwd, NEW_HTML);
+    String        newHtmlSrc    = st ? NEW_ST_HTML : NEW_HTML;
+
+    GolfResource  newHtml       = new GolfResource(cwd, newHtmlSrc);
     GolfResource  headHtml      = new GolfResource(cwd, HEAD_HTML);
     GolfResource  noscriptHtml  = 
-      new GolfResource(cwd, (fc ? NOSCRIPT_FC_HTML : NOSCRIPT_HTML));
+      new GolfResource(cwd, 
+          (fc ? NOSCRIPT_FC_HTML : (st ? NOSCRIPT_ST_HTML : NOSCRIPT_HTML)));
 
     if (mNewHtml == null)
       mNewHtml = newHtml.toString();
@@ -726,6 +836,9 @@ public class Main
     result = result.replaceFirst("__RESTBACKENDS__", backends.toString());
     result = result.replaceFirst("__CLOUDFRONTDOMAIN__", o.getOpt("cfdomains"));
 
+    if (st)
+      result = result.replaceAll("\\?path=/*", "");
+
     return result;
   }
 
@@ -744,12 +857,16 @@ public class Main
   }
 
   private static String getComponentsString() throws Exception {
-    return "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
+    String ret = 
+          "jQuery.golf.components=" + getComponentsJSON(null, null) + ";" +
            "jQuery.golf.res=" + getResourcesJSON(null, null) + ";" +
            "jQuery.golf.plugins=" + getScriptsJSON(DIR_MODULES, null) + ";" +
            "jQuery.golf.scripts=" + getScriptsJSON(DIR_SCRIPTS, null) + ";" +
            "jQuery.golf.styles=" + getStylesJSON(DIR_STYLES, null) + ";" +
            "jQuery.golf.setupComponents();";
+    if (o.getOpt("static") != null)
+      ret = ret.replaceAll("\\?path=/*", "");
+    return ret;
   }
 
   private static String getResourcesJSON(String path, JSONObject json) 
@@ -1076,68 +1193,6 @@ public class Main
         cacheResourcesAws(new File(file, f), ppath);
       }
     }
-  }
-
-  private void doServer() throws Exception {
-    o.setOpt("devmode", "true");
-    Server server = new Server(Integer.valueOf(o.getOpt("port")));
-    
-    cacheComponentsFile();
-    cacheNewDotHtmlFile();
-
-    QueuedThreadPool threadPool = new QueuedThreadPool();
-    threadPool.setMaxThreads(100);
-    server.setThreadPool(threadPool);
-
-    ContextHandlerCollection contexts = new ContextHandlerCollection();
-    HandlerList handlers              = new HandlerList();
-    
-    for (String app: mApps.keySet()) {
-      Log.info("Starting app `" + app + "'");
-
-      String docRoot    = mApps.get(app);
-
-      String golfPath   = "/" + app;
-      String golfRoot   = docRoot;
-
-      Context cx1 = new Context(contexts, golfPath, Context.SESSIONS);
-      cx1.setResourceBase(golfRoot);
-      cx1.setDisplayName(o.getOpt("displayname"));
-      ServletHolder sh1 = new ServletHolder(new GolfServlet());
-
-      // manually set init parameters
-      sh1.setInitParameter("devmode",     o.getOpt("devmode"));
-      sh1.setInitParameter("poolsize",    o.getOpt("pool-size"));
-      sh1.setInitParameter("poolexpire",  o.getOpt("pool-expire"));
-
-      cx1.addServlet(sh1, "/*");
-    }
-
-    for (String app: mBackends.keySet()) {
-      Log.info("Starting app `" + app + "'");
-
-      String docRoot    = mBackends.get(app);
-
-      String golfPath   = "/" + app;
-      String golfRoot   = docRoot;
-
-      WebAppContext wac = new WebAppContext();
-      wac.setContextPath(golfPath);
-      wac.setWar(docRoot);
-
-      handlers.addHandler(wac);
-    }
-
-    handlers.addHandler(contexts);
-    handlers.addHandler(new DefaultHandler());
-    //handlers.addHandler(new RequestLogHandler());
-
-    server.setHandler(handlers);
-    server.setStopAtShutdown(true);
-    server.setSendServerVersion(true);
-
-    server.start();
-    server.join();
   }
 
   private static String getRelativePath(File f, File base) 
