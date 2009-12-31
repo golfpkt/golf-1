@@ -16,7 +16,12 @@ function Debug(prefix) {
 }
 
 function $local(selector, root) {
-  return $(selector, root).not($(".component *", root)).not(".component");
+  return $(root)
+            .find("*")
+            .andSelf()
+            .filter(selector)
+            .not($(".component *", root).get())
+            .not($("* .component", root).get());
 }
 
 function checkForReservedClass(elems, shutup) {
@@ -561,6 +566,16 @@ $.golf = {
   setupComponents: function() {
     var cmp, name, i, m, scripts=[];
 
+    d("Loading scripts/ directory...");
+    for (name in $.golf.scripts)
+      scripts.push(name);
+
+    // sort scripts by name
+    scripts = scripts.sort();
+
+    for (i=0, m=scripts.length; i<m; i++)
+      $.globalEval($.golf.scripts[scripts[i]].js);
+
     d("Setting up components now.");
 
     d("Loading components/ directory...");
@@ -581,16 +596,6 @@ $.golf = {
     // can't expect them to be idempotent
     if ($.golf.loaded)
       return;
-
-    d("Loading scripts/ directory...");
-    for (name in $.golf.scripts)
-      scripts.push(name);
-
-    // sort scripts by name
-    scripts = scripts.sort();
-
-    for (i=0, m=scripts.length; i<m; i++)
-      $.globalEval($.golf.scripts[scripts[i]].js);
 
     d("Done loading directories...");
     $.golf.loaded = true;
@@ -724,34 +729,36 @@ $.golf = {
       // $fake: the component-localized jQuery
 
       var $fake = function( selector, context ) {
-        return new $fake.fn.init( selector, context );
-      };
+        var isHtml = /^[^<]*(<(.|\s)+>)[^>]*$/;
 
-      $.extend(true, $fake, $);
-      $fake.prototype = $fake.fn;
-      $fake.fn.init.prototype = $fake.fn;
-      $fake.Event.prototype = $.Event.prototype;
+        // if it's a function then immediately execute it (DOM loading
+        // is guaranteed to be complete by the time this runs)
+        if ($.isFunction(selector)) {
+          selector();
+          return;
+        }
 
-      (function(orig) {
-        $fake.fn.init = function(selector) {
-          var isHtml = /^[^<]*(<(.|\s)+>)[^>]*$/;
+        // if it's not a css selector then passthru to jQ
+        if (typeof selector != "string" || selector.match(isHtml))
+          return new $(selector);
 
-          // if it's a function then immediately execute it (DOM loading
-          // is guaranteed to be complete by the time this runs)
-          if ($.isFunction(selector))
-            return selector();
-
-          // if it's not a css selector then passthru to jQ
-          if (typeof selector != "string" || selector.match(isHtml))
-            return new orig(selector);
-
-          // it's a css selector
-          return new orig(obj._dom)
+        // it's a css selector
+        if (context != null)
+          return $(context)
                     .find(selector)
                     .not($(".component *", obj._dom).get())
-                    .not(".component");
-        };
-      })($fake.fn.init);
+                    .not($("* .component", obj._dom).get());
+        else 
+          return $(obj._dom)
+                    .find("*")
+                    .andSelf()
+                    .filter(selector)
+                    .not($(".component *", obj._dom).get())
+                    .not($("* .component", obj._dom).get());
+      };
+
+      $.extend($fake, $);
+      $fake.prototype = $fake.fn;
 
       $fake.component = cmp;
 
