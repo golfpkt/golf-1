@@ -544,7 +544,7 @@ $.golf = {
       $(data)._golf_addClass("component")
              ._golf_addClass(name.replace(".", "-"))
     );
-    html.find("style[type='text/golf'],script[type='text/golf']").remove();
+    html.find("style,script").remove();
     var cmp  = { 
       "name"  : name,
       "html"  : html.html(),
