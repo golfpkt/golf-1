@@ -630,10 +630,11 @@ $.golf = {
     return function(hash, b) {
 
       d("history change => '"+hash+"'");
-      if (hash == "/") {
-        $.golf.location(String($.golf.defaultRoute));
-        return;
-      }
+      if (hash == "/")
+        return $.golf.location(String($.golf.defaultRoute));
+
+      if (hash.charAt(0) != "/")
+        return $.golf.location("/"+hash);
 
       if (hash && hash != lastHash) {
         lastHash = hash;
