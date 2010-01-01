@@ -231,55 +231,56 @@ public class GolfServlet extends HttpServlet {
       this.response    = response;
       this.p           = new GolfParams(request);
       this.s           = new GolfSession(request);
-      this.urlHash     = request.getPathInfo();
-      this.servletUrl  = request.getRequestURL().toString()
-                            .replaceFirst(";jsessionid=.*$", "");
+      this.servletUrl  =
+        request
+          .getRequestURL()
+          .toString()
+          .replaceFirst(";jsessionid=.*$", "")
+          .replaceFirst(
+            "^(https?://[^/]+"+Pattern.quote(request.getContextPath())+").*$",
+            "$1"
+          );
+      this.urlHash     = 
+        request
+          .getRequestURL()
+          .toString()
+          .replaceFirst(";jsessionid=.*$", "")
+          .replaceFirst(
+            "^https?://[^/]+"+Pattern.quote(request.getContextPath()),
+            ""
+          );
     }
 
     public void init() throws ServletException, RedirectException {
-      try {
-        servletUrl  = URLDecoder.decode(servletUrl, "UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        throw new ServletException(e);
-      }
+      // some servlet containers have been known to produce a null urlHash
+      urlHash = (urlHash == null ? "" : urlHash);
 
-      // this is why this should be a singleton!
+      // reload the page in proxy mode => destroy old jsvm
       if (p.getReload() != null && p.getReload().booleanValue()) {
         log(this, LOG_INFO, "RELOAD via query parameter");
-        request.getSession(true).invalidate();
         mJsvms.remove(request.getSession().getId());
-        throw new RedirectException(servletUrl);
+        initProxy(this);
       }
-
-      String origRequestUrl = servletUrl;
-
-      // some servlet containers have been known to produce a null urlHash
-      if (urlHash == null || urlHash.equals("/"))
-        urlHash = "";
 
       // ensure that the URL is in the standard form
 
       // http://example.com/app//some/path/ ==>>
-      //    servletUrl => http://example.com/app/
-      //    urlHash    => /some/path/
+      //    servletUrl => http://example.com/app
+      //    urlHash    => //some/path/
 
-      if (!servletUrl.endsWith("/")) {
-        urlHash += "/";
-        servletUrl += "/";
-      }
-
-      servletUrl  = servletUrl.replaceFirst(Pattern.quote(urlHash)+"$", "/")
-                      .replaceFirst("/+$", "/");
-      urlHash     = urlHash.replaceFirst("^/+", "/");
-
-      String newUrl = servletUrl + urlHash;
-
-      if (!origRequestUrl.equals(newUrl)) {
+      System.out.println("====> servletUrl='"+servletUrl);
+      System.out.println("====> urlHash='"+urlHash);
+      if (urlHash.startsWith("/")) {
+        servletUrl = servletUrl + "/";
+        urlHash    = urlHash.replaceFirst("^/", "");
+      } else {
         //System.err.println("{{{ REDIRECT 0 }}}");
-        throw new PermanentRedirectException(proxyURLEncode(proxyURLEncode(
-            response.encodeRedirectURL(response.encodeRedirectURL(newUrl)))));
+        throw new PermanentRedirectException(
+          response.encodeRedirectURL(
+            servletUrl+"//"+urlHash.replaceFirst("^/+", "")));
       }
 
+      // fetch the jsvm for this guy
       jsvm = mJsvms.get(request.getSession().getId());
 
       if (jsvm == null)
@@ -356,14 +357,16 @@ public class GolfServlet extends HttpServlet {
       // initialize context
       context.init();
 
+      /*
       String url = context.request.getRequestURL().toString()
         .replaceFirst(";jsessionid=.*$", "");
 
       if (! url.endsWith("/")) {
         //System.err.println("{{{ REDIRECT 7 }}}");
         throw new PermanentRedirectException(
-            proxyURLEncode(context.response.encodeRedirectURL(url + "/")));
+            context.response.encodeRedirectURL(url + "/"));
       }
+      */
 
       // handle your business
       if (context.p.getPath() != null)
@@ -579,10 +582,7 @@ public class GolfServlet extends HttpServlet {
     String      lastTarget  = context.s.getLastTarget();
     String      lastUrl     = context.s.getLastUrl();
 
-    context.jsvm.lastPage = null;
-    context.s.setLastEvent(null);
-    context.s.setLastTarget(null);
-    context.s.setLastUrl(null);
+    initProxy(context);
 
     if (result == null || !path.equals(lastUrl)) {
       if (lastEvent == null || lastTarget == null || !path.equals(lastUrl)) {
@@ -691,8 +691,8 @@ public class GolfServlet extends HttpServlet {
         }
       }
 
-      String loc  = (String) result.executeJavaScript("window.location.href")
-                              .getJavaScriptResult();
+      String loc  = (String) result.executeJavaScript(
+          "encodeURIComponent(window.location.href)").getJavaScriptResult();
 
       try {
         loc = URLDecoder.decode(loc, "UTF-8");
@@ -772,6 +772,18 @@ public class GolfServlet extends HttpServlet {
 
     context.jsvm.client = new WebClient(context.browser);
     mJsvms.put(context.request.getSession().getId(), context.jsvm);
+  }
+
+  /**
+   * Initialize state prior to proxy service.
+   */
+  private void initProxy(GolfContext context) {
+    // zero out query hiding redirect chain data
+    if (context.jsvm != null)
+      context.jsvm.lastPage = null;
+    context.s.setLastEvent(null);
+    context.s.setLastTarget(null);
+    context.s.setLastUrl(null);
   }
 
   /**
@@ -863,12 +875,12 @@ public class GolfServlet extends HttpServlet {
               uri = context.servletUrl + 
                 (context.urlHash.length() > 0 ? "#" + context.urlHash : "");
             } else {
-              uri = context.request.getRequestURI();
+              uri = context.request.getRequestURL().toString();
             }
             
             //System.err.println("{{{ REDIRECT 6 }}}");
             throw new RedirectException(
-                proxyURLEncode(context.response.encodeRedirectURL(uri)));
+                context.response.encodeRedirectURL(uri));
           }
         } else if (forceUa || seq >= 2) {
           if (forceUa || context.s.getJs() != null) {
