@@ -72,7 +72,6 @@ public class GolfServlet extends HttpServlet {
     private String get(String name) { 
       return (String) mSess.getAttribute(name);
     }
-
     private void set(String name, String value) { 
       mSess.setAttribute(name, value);
     }
@@ -82,7 +81,6 @@ public class GolfServlet extends HttpServlet {
         return Integer.parseInt(get("golf"));
       } catch (NumberFormatException e) { }
       return null;
-        
     }
     public void setSeq(Integer value) {
       set("golf", String.valueOf(value));
@@ -200,18 +198,6 @@ public class GolfServlet extends HttpServlet {
     }
     private String toQueryParam(String name, Integer p) {
       return p != null ? name+"="+p.toString() : "";
-    }
-
-    public String toQueryString() {
-      String result = "";
-      result += toQueryParam("event",     mEvent);
-      result += toQueryParam("target",    mTarget);
-      result += toQueryParam("force",     mForce);
-      result += toQueryParam("golf",      mSeq);
-      result += toQueryParam("js",        mJs);
-      result += toQueryParam("path",      mPath);
-      result += toQueryParam("reload",    mReload);
-      return result.length() > 0 ? "?"+result : "";
     }
   }
 
@@ -597,8 +583,6 @@ public class GolfServlet extends HttpServlet {
     context.s.setLastEvent(null);
     context.s.setLastTarget(null);
     context.s.setLastUrl(null);
-
-    log(context, LOG_INFO, "==========> "+path+":"+lastUrl+" <==========");
 
     if (result == null || !path.equals(lastUrl)) {
       if (lastEvent == null || lastTarget == null || !path.equals(lastUrl)) {
