@@ -290,8 +290,8 @@ public class GolfServlet extends HttpServlet {
 
       if (!origRequestUrl.equals(newUrl)) {
         //System.err.println("{{{ REDIRECT 0 }}}");
-        throw new PermanentRedirectException(
-            response.encodeRedirectURL(response.encodeRedirectURL(newUrl)));
+        throw new PermanentRedirectException(proxyURLEncode(proxyURLEncode(
+            response.encodeRedirectURL(response.encodeRedirectURL(newUrl)))));
       }
 
       jsvm = mJsvms.get(request.getSession().getId());
@@ -376,7 +376,7 @@ public class GolfServlet extends HttpServlet {
       if (! url.endsWith("/")) {
         //System.err.println("{{{ REDIRECT 7 }}}");
         throw new PermanentRedirectException(
-            context.response.encodeRedirectURL(url + "/"));
+            proxyURLEncode(context.response.encodeRedirectURL(url + "/")));
       }
 
       // handle your business
@@ -598,6 +598,8 @@ public class GolfServlet extends HttpServlet {
     context.s.setLastTarget(null);
     context.s.setLastUrl(null);
 
+    log(context, LOG_INFO, "==========> "+path+":"+lastUrl+" <==========");
+
     if (result == null || !path.equals(lastUrl)) {
       if (lastEvent == null || lastTarget == null || !path.equals(lastUrl)) {
         if (event != null && target != null && client != null) {
@@ -628,8 +630,8 @@ public class GolfServlet extends HttpServlet {
           context.s.setLastUrl(path);
           if (context.request.getQueryString() != null) {
             //System.err.println("{{{ REDIRECT 1 }}}");
-            throw new RedirectException(
-                context.response.encodeRedirectURL(context.servletUrl + path));
+            throw new RedirectException(proxyURLEncode(
+                context.response.encodeRedirectURL(context.servletUrl + path)));
           } else {
             lastEvent   = context.s.getLastEvent();
             lastTarget  = context.s.getLastTarget();
@@ -690,8 +692,8 @@ public class GolfServlet extends HttpServlet {
             script = "jQuery(\"[golfid='"+lastTarget+"']\").submit()";
           } else {
             //System.err.println("{{{ REDIRECT 2 }}}");
-            throw new RedirectException(
-                context.response.encodeRedirectURL(context.servletUrl + path));
+            throw new RedirectException(proxyURLEncode(
+                context.response.encodeRedirectURL(context.servletUrl + path)));
           }
           // removed components update due to issues
           if (Boolean.parseBoolean(mDevMode))
@@ -700,8 +702,8 @@ public class GolfServlet extends HttpServlet {
           result.executeJavaScript(script);
         } else {
           //System.err.println("{{{ REDIRECT 3 }}}");
-          throw new RedirectException(
-              context.response.encodeRedirectURL(context.servletUrl + path));
+          throw new RedirectException(proxyURLEncode(
+              context.response.encodeRedirectURL(context.servletUrl + path)));
         }
       }
 
@@ -717,7 +719,7 @@ public class GolfServlet extends HttpServlet {
       if (!loc.startsWith(context.servletUrl)) {
         //System.err.println("{{{ REDIRECT 4 }}}");
         throw new RedirectException(
-            context.response.encodeRedirectURL(loc));
+            proxyURLEncode(context.response.encodeRedirectURL(loc)));
       } else {
         loc = loc.replaceFirst("^[^#]+#", "");
       }
@@ -726,8 +728,8 @@ public class GolfServlet extends HttpServlet {
         context.jsvm.lastPage = result;
         context.s.setLastUrl(loc);
         //System.err.println("{{{ REDIRECT 5 }}}");
-        throw new RedirectException(
-            context.response.encodeRedirectURL(context.servletUrl + loc));
+        throw new RedirectException(proxyURLEncode(
+            context.response.encodeRedirectURL(context.servletUrl + loc)));
       }
     }
 
@@ -882,7 +884,7 @@ public class GolfServlet extends HttpServlet {
             
             //System.err.println("{{{ REDIRECT 6 }}}");
             throw new RedirectException(
-                context.response.encodeRedirectURL(uri));
+                proxyURLEncode(context.response.encodeRedirectURL(uri)));
           }
         } else if (forceUa || seq >= 2) {
           if (forceUa || context.s.getJs() != null) {
@@ -1079,26 +1081,7 @@ public class GolfServlet extends HttpServlet {
   /**
    *
    */
-  public static boolean isSafeName(String name) {
-    return name.matches("^[a-zA-Z][a-zA-Z0-9-_.]*$");
-  }
-
-  /**
-   *
-   */
-  public static boolean isSafeGolfId(String golfid) {
-    try { 
-      Integer.parseInt(golfid);
-    } catch (NumberFormatException e) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   *
-   */
-  public static boolean isSafeEvent(String event) {
-    return (event.equals("onclick") || event.equals("onsubmit"));
+  public static String proxyURLEncode(String s) {
+    return s.replaceAll("#", "%23");
   }
 }
