@@ -259,7 +259,8 @@ public class GolfServlet extends HttpServlet {
       if (p.getReload() != null && p.getReload().booleanValue()) {
         log(this, LOG_INFO, "RELOAD via query parameter");
         mJsvms.remove(request.getSession().getId());
-        initProxy(this);
+        request.getSession(true).invalidate();
+        this.s = new GolfSession(request);
       }
 
       // ensure that the URL is in the standard form
@@ -276,8 +277,7 @@ public class GolfServlet extends HttpServlet {
       } else {
         //System.err.println("{{{ REDIRECT 0 }}}");
         throw new PermanentRedirectException(
-          response.encodeRedirectURL(
-            servletUrl+"//"+urlHash.replaceFirst("^/+", "")));
+          response.encodeRedirectURL(servletUrl+"/"+urlHash));
       }
 
       // fetch the jsvm for this guy
@@ -582,7 +582,10 @@ public class GolfServlet extends HttpServlet {
     String      lastTarget  = context.s.getLastTarget();
     String      lastUrl     = context.s.getLastUrl();
 
-    initProxy(context);
+    context.jsvm.lastPage = null;
+    context.s.setLastEvent(null);
+    context.s.setLastTarget(null);
+    context.s.setLastUrl(null);
 
     if (result == null || !path.equals(lastUrl)) {
       if (lastEvent == null || lastTarget == null || !path.equals(lastUrl)) {
@@ -772,18 +775,6 @@ public class GolfServlet extends HttpServlet {
 
     context.jsvm.client = new WebClient(context.browser);
     mJsvms.put(context.request.getSession().getId(), context.jsvm);
-  }
-
-  /**
-   * Initialize state prior to proxy service.
-   */
-  private void initProxy(GolfContext context) {
-    // zero out query hiding redirect chain data
-    if (context.jsvm != null)
-      context.jsvm.lastPage = null;
-    context.s.setLastEvent(null);
-    context.s.setLastTarget(null);
-    context.s.setLastUrl(null);
   }
 
   /**
