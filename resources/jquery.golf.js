@@ -630,10 +630,10 @@ $.golf = {
     return function(hash, b) {
 
       d("history change => '"+hash+"'");
-      if (hash == "/")
+      if (hash && hash == "/")
         return $.golf.location(String($.golf.defaultRoute));
 
-      if (hash.charAt(0) != "/")
+      if (hash && hash.charAt(0) != "/")
         return $.golf.location("/"+hash);
 
       if (hash && hash != lastHash) {
@@ -647,11 +647,12 @@ $.golf = {
   })(),
 
   route: function(hash, b) {
-    var theName, theAction, i, x, pat, match;
+    var theHash, theRoute, theAction, i, x, pat, match;
     if (!hash)
       hash = String($.golf.defaultRoute+"/").replace(/\/+$/, "/");
 
-    theName         = hash;
+    theHash         = hash;
+    theRoute        = null;
     theAction       = null;
 
     if (!b) b = $("body > div.golfbody").eq(0);
@@ -659,8 +660,9 @@ $.golf = {
 
     if ($.golf.controller) {
       for (i=0; i<$.golf.controller.length; i++) {
-        pat   = new RegExp($.golf.controller[i].route);
-        match = theName.match(pat);
+        theRoute = $.golf.controller[i].route;
+        match = $.isFunction(theRoute) ? theRoute(theHash) 
+                  : theHash.match(new RegExp(theRoute));
         if (match) {
           theAction = $.golf.controller[i].action;
           if (theAction(b, match)!==true)
