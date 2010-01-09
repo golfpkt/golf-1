@@ -269,8 +269,6 @@ public class GolfServlet extends HttpServlet {
       //    servletUrl => http://example.com/app
       //    urlHash    => //some/path/
 
-      System.out.println("====> servletUrl='"+servletUrl);
-      System.out.println("====> urlHash='"+urlHash);
       if (urlHash.startsWith("/")) {
         servletUrl = servletUrl + "/";
         urlHash    = urlHash.replaceFirst("^/", "");
@@ -300,7 +298,6 @@ public class GolfServlet extends HttpServlet {
   private static String               mNewHtmlFc    = null;
   private static String               mErrorPage    = null;
   private static String               mJsDetect     = null;
-  private static String               mComponents   = null;
   private static String               mDevMode      = null;
   private static String               mPoolSize     = null;
   private static String               mPoolExpire   = null;
@@ -421,8 +418,6 @@ public class GolfServlet extends HttpServlet {
         (new GolfResource(getServletContext(), Main.ERROR_HTML)).toString();
       mJsDetect = 
         (new GolfResource(getServletContext(), Main.JSDETECT_HTML)).toString();
-      mComponents =
-        (new GolfResource(getServletContext(), Main.COMPONENTS_JS)).toString();
 
       try {
         // wait for resource to be available
@@ -603,9 +598,6 @@ public class GolfServlet extends HttpServlet {
 
               String script = "jQuery(\"[name='"+key+"']\").val(\""+val+"\");";
 
-              // removed components update due to issues
-              if (Boolean.parseBoolean(mDevMode))
-                script = mComponents + script;
               result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
               result.executeJavaScript(script);
             }
@@ -662,9 +654,6 @@ public class GolfServlet extends HttpServlet {
           );
         } else {
           String script = "jQuery.address.value('"+context.urlHash+"');";
-          // removed components update due to issues
-          if (Boolean.parseBoolean(mDevMode))
-            script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         }
@@ -682,9 +671,6 @@ public class GolfServlet extends HttpServlet {
             throw new RedirectException(proxyURLEncode(
                 context.response.encodeRedirectURL(context.servletUrl + path)));
           }
-          // removed components update due to issues
-          if (Boolean.parseBoolean(mDevMode))
-            script = mComponents + script;
           result = (HtmlPage) client.getCurrentWindow().getEnclosedPage();
           result.executeJavaScript(script);
         } else {
@@ -695,13 +681,7 @@ public class GolfServlet extends HttpServlet {
       }
 
       String loc  = (String) result.executeJavaScript(
-          "encodeURIComponent(window.location.href)").getJavaScriptResult();
-
-      try {
-        loc = URLDecoder.decode(loc, "UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        throw new ServletException(e);
-      }
+          "window.location.href").getJavaScriptResult();
 
       if (!loc.startsWith(context.servletUrl)) {
         //System.err.println("{{{ REDIRECT 4 }}}");
@@ -731,7 +711,7 @@ public class GolfServlet extends HttpServlet {
         "function() { "+
           "var elem = jQuery(this).children().eq(0); "+
           "if (elem) { "+
-            "jQuery.golf.jss.doit(elem, true); "+
+            "jQuery.golf.jss(elem, true); "+
           "} "+
         "} "+
       ")"
@@ -1004,7 +984,7 @@ public class GolfServlet extends HttpServlet {
    */
   private void logRequest(GolfContext context) {
     String method = context.request.getMethod();
-    String path   = context.request.getPathInfo();
+    String path   = context.urlHash;
     String query  = context.request.getQueryString();
     String host   = context.request.getRemoteHost();
     String sid    = context.request.getSession().getId();
@@ -1033,7 +1013,7 @@ public class GolfServlet extends HttpServlet {
    */
   private void logResponse(GolfContext context, int status) {
     String method = String.valueOf(status);
-    String path   = context.request.getPathInfo();
+    String path   = context.urlHash;
     String query  = context.request.getQueryString();
     String host   = context.request.getRemoteHost();
     String sid    = context.request.getSession().getId();
