@@ -752,17 +752,20 @@ $.golf = {
         if (!$.golf.singleton[name])
           $.golf.singleton[name] = {};
 
-        (function(jQuery,$,js,exports,singleton,options) {
+        (function(jQuery,$,js,singleton,options) {
           if (!singleton._init) {
             d("require: loading '"+name+"'");
-            eval("exports._init = "+
-              "function($,jQuery,exports,singleton) { "+js+" }");
+            eval("exports._init = function($,jQuery,exports,singleton) { "+
+              js+"; "+
+              "return exports; "+
+            "}");
             $.extend(true, singleton, exports);
+            delete exports._init;
           } else {
             d("require: loading '"+name+"' from cache");
           }
-          singleton._init($,$,exports,singleton);
-        }).call(target,$fake,$fake,js,exports,$.golf.singleton[name],options);
+          exports = singleton._init($,$,exports,singleton);
+        }).call(target,$fake,$fake,js,$.golf.singleton[name],options);
       } catch (x) {
         d("can't require("+name+"): "+x);
       }
