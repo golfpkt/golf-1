@@ -1,5 +1,32 @@
 (function($) {
 
+function toJson(obj) {
+ switch (typeof obj) {
+  case 'object':
+   if (obj) {
+    var list = [];
+    if (obj instanceof Array) {
+     for (var i=0;i < obj.length;i++) {
+      list.push(toJson(obj[i]));
+     }
+     return '[' + list.join(',') + ']';
+    } else {
+     for (var prop in obj) {
+      list.push('"' + prop + '":' + toJson(obj[prop]));
+     }
+     return '{' + list.join(',') + '}';
+    }
+   } else {
+    return 'null';
+   }
+  case 'string':
+   return '"' + obj.replace(/(["'])/g, '\\$1') + '"';
+  case 'number':
+  case 'boolean':
+   return new String(obj);
+ }
+}
+
 function Component() {
   this._dom = null;
   this._$   = null;
@@ -738,7 +765,8 @@ $.golf = {
   },
 
   require: function($fake) {
-    return function(name, options) {
+
+    return function(name, cache) {
       var js, exports, target;
 
       try {
@@ -752,7 +780,24 @@ $.golf = {
         if (!$.golf.singleton[name])
           $.golf.singleton[name] = {};
 
-        (function(jQuery,$,js,singleton,options) {
+        if (cache && cache[name]) {
+          d("require: loading '"+name+"' recursively from cache");
+          return cache[name];
+        }
+
+        if (!cache) {
+          cache = {};
+          
+          $fake.require = (function(orig) {
+            return function(name) {
+              return orig(name, cache);
+            };
+          })($fake.require);
+        }
+
+        cache[name] = exports;
+
+        (function(jQuery,$,js,singleton) {
           if (!singleton._init) {
             d("require: loading '"+name+"'");
             eval("exports._init = function($,jQuery,exports,singleton) { "+
@@ -764,11 +809,12 @@ $.golf = {
           } else {
             d("require: loading '"+name+"' from cache");
           }
-          exports = singleton._init($,$,exports,singleton);
-        }).call(target,$fake,$fake,js,$.golf.singleton[name],options);
+          singleton._init($,$,exports,singleton);
+        }).call(target,$fake,$fake,js,$.golf.singleton[name]);
       } catch (x) {
         d("can't require("+name+"): "+x);
       }
+
       return exports;
     };
   }
