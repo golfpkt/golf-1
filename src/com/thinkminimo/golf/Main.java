@@ -6,6 +6,7 @@ import org.json.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -701,7 +702,7 @@ public class Main
     return f;
   }
 
-  public File cacheStringFile(String text, String ext, File f)
+  public static File cacheStringFile(String text, String ext, File f)
     throws IOException {
     if (f == null)
       f = getTmpFile(ext);
@@ -1020,6 +1021,37 @@ public class Main
 
     String htmlStr = htmlRes.toString().replaceAll("\\?resource=", resUriPath);
 
+    String pat1 = "</script>";
+    String pat2 = "<script +([^>]* +)*type *= *\"text/golf\"( [^>]*)*>";
+
+    String cmpJs1 = Pattern
+      .compile("^(.*"+pat2+").*$", Pattern.DOTALL)
+      .matcher(htmlStr)
+      .replaceFirst("$1");
+
+    String cmpJs2 = Pattern
+      .compile(pat1+".*$", Pattern.DOTALL)
+      .matcher(
+        Pattern
+          .compile("^.*"+pat2, Pattern.DOTALL)
+          .matcher(htmlStr)
+          .replaceFirst(""))
+      .replaceFirst("");
+
+    String cmpJs3 = Pattern
+      .compile("^.*("+pat1+".*)$", Pattern.DOTALL)
+      .matcher(
+        Pattern
+          .compile("^.*"+pat2, Pattern.DOTALL)
+          .matcher(htmlStr)
+          .replaceFirst(""))
+      .replaceFirst("$1");
+
+    File jsFile = cacheStringFile(cmpJs2, "js", null);
+    cmpJs2 = processComponentJs(cmpJs2, jsFile.getCanonicalPath());
+
+    htmlStr = cmpJs1 + "\n" + cmpJs2 + "\n" + cmpJs3;
+
     JSONObject json = new JSONObject()
         .put("name",  classPath)
         .put("html",  htmlStr)
@@ -1035,7 +1067,7 @@ public class Main
     File   cwd          = new File(o.getOpt("approot|proxypath"), dir);
     String js           = name + ".js";
     GolfResource jsRes  = new GolfResource(cwd, js);
-    String jsStr        = processComponentJs(jsRes.toString(), js);
+    String jsStr        = processComponentJs(jsRes.toString(), (new File(cwd, js)).getCanonicalPath());
     JSONObject json     = new JSONObject().put("js",    jsStr);
 
     return json;
@@ -1127,8 +1159,36 @@ public class Main
   public static String processComponentJs(String text, String filename)
       throws Exception {
     String result = text;
+
+    if (text.startsWith("#!")) {
+      result = "";
+
+      ArrayList<String> shbang = parseAsShell(
+        text.substring(0, text.indexOf("\n"))
+          .replaceFirst("^#![\\s]*", "")
+          .replaceFirst("[\\s]*$", " ")
+      );
+
+      shbang.add(filename);
+
+      Process p = 
+        Runtime.getRuntime().exec(shbang.toArray(new String[shbang.size()]));
+
+      int exitVal = p.waitFor();
+
+      BufferedReader br = new BufferedReader(new InputStreamReader(
+            (exitVal == 0 ? p.getInputStream() : p.getErrorStream())));
+
+      while ((text = br.readLine()) != null)
+        result += text + "\n";
+
+      if (exitVal != 0)
+        throw new Exception(result);
+    }
+
     if (!o.getFlag("devmode"))
       result = compressJs(result, filename);
+
     return result;
   }
 
@@ -1200,6 +1260,22 @@ public class Main
     URI  u1 = new URI(base.toURI().toString());
     URI  u2 = new URI(f.toURI().toString());
     return u1.relativize(u2).toString();
+  }
+
+  public static ArrayList<String> parseAsShell(String line) throws Exception {
+    ArrayList<String> ret = new ArrayList<String>();
+
+    StreamTokenizer st = new StreamTokenizer(new StringReader(line));
+    st.resetSyntax();
+    st.wordChars(33, 126);
+    st.whitespaceChars(' ', ' ');
+    st.quoteChar('"');
+    st.quoteChar('\'');
+
+    while (st.nextToken() != StreamTokenizer.TT_EOF)
+      ret.add(st.sval);
+
+    return ret;
   }
 
   private String randName(String base) {
