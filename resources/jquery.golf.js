@@ -129,7 +129,9 @@ var jss = {
     }
 
     cpdom.data("_golf_jss_dirty", true);
-    setTimeout(function() { jss.doit(elem) }, 10);
+    if ($.golf.jssTimeout >= 0)
+      setTimeout(function() { jss.doit(elem) }, 10);
+    else jss.doit(elem);
   },
 
   doit: function(elem, force) {
@@ -638,6 +640,8 @@ if (serverside) {
 
 $.golf = {
 
+  jssTimeout: 10,
+
   controller: [],
 
   defaultRoute: "/home/",
@@ -649,6 +653,8 @@ $.golf = {
   events: [],
 
   singleton: {},
+
+  toJson: toJson,
 
   jss: function() {
     var argv = Array.prototype.slice.call(arguments);
@@ -670,6 +676,7 @@ $.golf = {
   },
 
   addComponent: function(data, name) {
+    var orig = data;
     var js = 
       data
         .replace(/^(.|\n)*<script +type *= *("text\/golf"|'text\/golf')>/, "")
@@ -684,6 +691,7 @@ $.golf = {
     );
     html.find("style,script").remove();
     var cmp  = { 
+      "orig"  : orig,
       "name"  : name,
       "html"  : html.html(),
       "dom"   : $(html.html()),
@@ -747,20 +755,27 @@ $.golf = {
     if (!b) b = $("body > div.golfbody").eq(0);
     //b.empty();
 
-    if ($.golf.controller) {
-      for (i=0; i<$.golf.controller.length; i++) {
-        theRoute = $.golf.controller[i].route;
-        match = $.isFunction(theRoute) ? theRoute(theHash) 
-                  : theHash.match(new RegExp(theRoute));
-        if (match) {
-          theAction = $.golf.controller[i].action;
-          if (theAction(b, match)!==true)
-            break;
-          theAction = null;
+    try {
+      if ($.golf.controller.length > 0) {
+        for (i=0; i<$.golf.controller.length; i++) {
+          theRoute = $.golf.controller[i].route;
+          match = $.isFunction(theRoute) ? theRoute(theHash) 
+                    : theHash.match(new RegExp(theRoute));
+          if (match) {
+            theAction = $.golf.controller[i].action;
+            if (theAction(b, match)!==true)
+              break;
+            theAction = null;
+          }
         }
+      } else {
+        alert("GOLF is installed! Congratulations. Now make yourself an app.");
       }
-    } else {
-      alert("GOLF is installed! Congratulations. Now make yourself an app.");
+    } catch (e) {
+      $(document).trigger({
+        type: "route_error",
+        message: e.toString()
+      });
     }
   },
 
