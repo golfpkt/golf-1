@@ -3,7 +3,7 @@
   <!-- use defaults unless already set by included configuration files -->
   <property name="vendor.namespace" value="com.thinkminimo"/>
   <property name="app.name"         value="golf"/>
-  <property name="app.version.in"   value="0.33"/>
+  <property name="app.version.in"   value="0.34"/>
   <property name="app.release"      value="dev"/>
   <property name="app.vendor"       value="thinkminimo.com"/>
 
