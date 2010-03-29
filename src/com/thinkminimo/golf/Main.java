@@ -1078,8 +1078,10 @@ public class Main
     name = name.replaceFirst("^[a-z]+/+", "");
 
     File   cwd          = new File(o.getOpt("approot|proxypath"), dir);
-    String css          = (new GolfResource(cwd, name+".css")).toString()
-                            .replaceAll(" *\n *", " ");
+    // FIXME: only in non-devmode should css be messed with like this
+    //String css          = (new GolfResource(cwd, name+".css")).toString()
+    //                        .replaceAll(" *\n *", " ");
+    String css          = (new GolfResource(cwd, name+".css")).toString();
     JSONObject json     = new JSONObject().put("css", css);
 
     return json;
