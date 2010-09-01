@@ -30,6 +30,12 @@ function toJson(obj) {
 function Component() {
   this._dom = null;
   this._$   = null;
+  this.hide = function() {
+    this._dom.hide(Array.prototype.slice.call(arguments));
+  };
+  this.show = function() {
+    this._dom.show(Array.prototype.slice.call(arguments));
+  };
 }
 
 function Debug(prefix) {
@@ -323,7 +329,7 @@ var onHistoryChange = (function() {
 })();
 
 function prepare(p) {
-  $("*", p.parent()).each(function() { 
+  $("*", p).each(function() { 
     var jself = $(this);
 
     if (jself.data("_golf_prepared"))
@@ -449,17 +455,42 @@ if (serverside) {
     $.fn.bind = (function(bind) {
       var lastId = 0;
       return function(name, fn) {
-        var jself = $(this);
+        var jself   = $(this);
+        var _href   = jself.attr("href");
+        var _golfid = jself.attr("golfid");
         if (name == "click") {
-          ++lastId;
-          jself.attr("golfid", lastId);
-          var e = "onclick";
-          var a = "<a rel='nofollow' href='?target="+lastId+
-            "&amp;event=onclick'></a>";
-          jself.wrap(a);
-          jself._golf_addClass("golfproxylink");
+          if (!_golfid) {
+            ++lastId;
+            jself.attr("golfid", lastId);
+          }
+          if (_href) {
+            jself.data("_golf_oldfn", fn);
+
+            if (_href && _href.charAt(0) != "#")
+              jself.data("_golf_oldhref", 
+                  "/"+_href.replace(/^(http:\/\/)?([^\/]\/?)*\/\//g, ""));
+            else if (jself.attr("href"))
+              jself.data("_golf_oldhref", _href.replace(/^#/, ""));
+
+            jself.attr({
+              rel:  "nofollow",
+              href: "?target="+lastId+"&event=onclick"
+            });
+            fn = function() {
+              var argv = Array.prototype.slice.call(arguments);
+              if ($(this).data("_golf_oldfn").apply(jss, argv) !== false) {
+                $(this).attr("href", servletUrl+$(this).data("_golf_oldhref"));
+                $.golf.location($(this).data("_golf_oldhref"));
+              }
+            };
+          } else {
+            var a = "<a rel='nofollow' href='?target="+lastId+
+              "&amp;event=onclick'></a>";
+            jself.wrap(a);
+            jself._golf_addClass("golfproxylink");
+          }
         } else if (name == "submit") {
-          if (!jself.attr("golfid")) {
+          if (!_golfid) {
             ++lastId;
             jself.attr("golfid", lastId);
             jself.append(
@@ -507,6 +538,28 @@ if (serverside) {
     };
   })($.ajax);
 
+} else {
+
+  $.fn.bind = (function(bind) {
+    var lastId = 0;
+    return function(name, fn) {
+      var jself = $(this);
+      if (name == "submit") {
+        var oldfn = fn;
+        fn = function() {
+          var argv = Array.prototype.slice.call(arguments);
+          try {
+            oldfn.apply(this, argv);
+          } catch(e) {
+            $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
+          }
+          return false;
+        };
+      }
+      return bind.call(jself, name, fn);
+    };
+  })($.fn.bind);
+
 }
 
 // install overrides on jQ DOM manipulation methods to accomodate components
@@ -539,6 +592,15 @@ if (serverside) {
         }; 
       }
     );
+
+    $.fn._golf_remove = $.fn.remove;
+    $.fn.remove = function() { 
+      $("*", this).add([this]).each(function() {
+        if ($(this).attr("golfid"))
+          $.golf.events[$(this).attr("golfid")] = [];
+      });
+      return $.fn._golf_remove.call(this);
+    }; 
 
     $.each(
       [
@@ -623,15 +685,9 @@ if (serverside) {
               anchor = uri1.anchor;
             }
             if (serverside)
-              uri = servletUrl + anchor;
-            else
-              $(this).click(function() {
-                $.golf.location(anchor);
-                return false;
-              });
+              this.attr("href", servletUrl + anchor);
           }
         }
-        this.attr("href", uri);
       }; 
     })();
 })();
@@ -758,25 +814,37 @@ $.golf = {
     try {
       if ($.golf.controller.length > 0) {
         for (i=0; i<$.golf.controller.length; i++) {
-          theRoute = $.golf.controller[i].route;
+          theRoute = "^"+$.golf.controller[i].route+"$";
           match = $.isFunction(theRoute) ? theRoute(theHash) 
                     : theHash.match(new RegExp(theRoute));
           if (match) {
             theAction = $.golf.controller[i].action;
             if (theAction(b, match)!==true)
               break;
-            theAction = null;
           }
         }
+        if (theAction === null)
+          $.golf.errorPage("Not Found", "<span>There is no route "
+            +"matching <code>"+theHash+"</code>.</span>");
       } else {
-        alert("GOLF is installed! Congratulations. Now make yourself an app.");
+        $.golf.errorPage("Hi there!", "<span>Your Golf web application "
+          +"server is up and running.</span>");
       }
     } catch (e) {
       $(document).trigger({
         type: "route_error",
         message: e.toString()
       });
+      $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
     }
+  },
+
+  errorPage: function(type, desc) {
+    $.get("?path=app_error.html", function(data) {
+      $(".golfbody").empty().append(data);
+      $(".golfbody .type").text(type);
+      $(".golfbody .description").append(desc);
+    });
   },
 
   require: function($fake) {
@@ -827,7 +895,7 @@ $.golf = {
           singleton._init($,$,exports,singleton);
         }).call(target,$fake,$fake,js,$.golf.singleton[name]);
       } catch (x) {
-        d("can't require("+name+"): "+x);
+        throw "require: "+name+".js: "+x;
       }
 
       return exports;
