@@ -329,8 +329,10 @@ var onHistoryChange = (function() {
 })();
 
 function prepare(p) {
-  $("*", p).each(function() { 
+  $("*", p).add([ p ]).each(function() { 
+    // FIXME: verify whether 'this' is jQuery obj or DOM elem?
     var jself = $(this);
+    var eself = jself.get()[0];
 
     if (jself.data("_golf_prepared"))
       return;
@@ -338,8 +340,8 @@ function prepare(p) {
     jself.data("_golf_prepared", true);
 
     // makes hrefs in links work in both client and proxy modes
-    if (this.tagName == "A")
-      jself.href(this.href);
+    if (eself.tagName === "A")
+      jself.href(eself.href);
   });
   return p;
 }
@@ -580,6 +582,7 @@ if (serverside) {
           var e = $(a instanceof Component ? a._dom : a);
           if (! (a instanceof Component))
             checkForReservedClass(e);
+
           prepare(e);
           var ret = $.fn["_golf_"+v].call($(this), e);
           $(e.parent()).each(function() {
