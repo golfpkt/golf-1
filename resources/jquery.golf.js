@@ -812,19 +812,16 @@ $.golf = {
     theAction       = null;
 
     if (!b) b = $("body > div.golfbody").eq(0);
-    //b.empty();
+    b.empty();
 
     try {
       if ($.golf.controller.length > 0) {
-        for (i=0; i<$.golf.controller.length; i++) {
+        for (i=0; i<$.golf.controller.length && theAction===null; i++) {
           theRoute = "^"+$.golf.controller[i].route+"$";
           match = $.isFunction(theRoute) ? theRoute(theHash) 
                     : theHash.match(new RegExp(theRoute));
-          if (match) {
-            theAction = $.golf.controller[i].action;
-            if (theAction(b, match)!==true)
-              break;
-          }
+          if (match)
+            (theAction = $.golf.controller[i].action)(b, match);
         }
         if (theAction === null)
           $.golf.errorPage("Not Found", "<span>There is no route "
