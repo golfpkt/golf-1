@@ -49,9 +49,9 @@ function Component() {
 function Debug(prefix) {
   return function(text) {
     text = prefix+": "+text;
-    if (window.devmode && window.console && window.console.log)
+    if ($.golf.devmode && window.console && window.console.log)
       console.log(text);
-    else if (window.serverside)
+    else if ($.golf.serverside)
       alert(text);
   };
 }
@@ -66,7 +66,7 @@ function $local(selector, root) {
 }
 
 function checkForReservedClass(elems, shutup) {
-  if (! $.golf.reservedClassChecking || window.forcebot)
+  if (! $.golf.reservedClassChecking || $.golf.forcebot)
     return [];
   var RESERVED_CLASSES = [ "component", "golfbody", "golfproxylink" ];
   var badclass = (
@@ -151,7 +151,7 @@ var jss = {
   doit: function(elem, force) {
     var cpdom, cpname, data, parsed;
 
-    if ((serverside && !force) || window.forcebot)
+    if (($.golf.serverside && !force) || $.golf.forcebot)
       return;
 
     try {
@@ -304,11 +304,11 @@ function makePkg(pkg, obj) {
 }
 
 function onLoad() {
-  if (serverside)
+  if ($.golf.serverside)
     $("noscript").remove();
 
-  if (urlHash && !location.hash)
-    window.location.replace(servletUrl + "#" + urlHash);
+  if ($.golf.urlHash && !location.hash)
+    window.location.replace($.golf.servletUrl + "#" + $.golf.urlHash);
 
   $.address.change(function(evnt) {
       onHistoryChange(evnt.value);
@@ -427,9 +427,9 @@ window.Component  = Component;
 
 // serverside mods to jQuery
 
-if (serverside) {
+if ($.golf.serverside) {
 
-  if (!window.forcebot) {
+  if (!$.golf.forcebot) {
     $.fx.off = true;
 
     $.fn.fadeIn = $.fn.slideDown = function(speed, callback) {
@@ -491,7 +491,8 @@ if (serverside) {
             fn = function() {
               var argv = Array.prototype.slice.call(arguments);
               if ($(this).data("_golf_oldfn").apply(jss, argv) !== false) {
-                $(this).attr("href", servletUrl+$(this).data("_golf_oldhref"));
+                $(this).attr("href", 
+                    $.golf.servletUrl+$(this).data("_golf_oldhref"));
                 $.golf.location($(this).data("_golf_oldhref"));
               }
             };
@@ -681,15 +682,15 @@ if (serverside) {
         var anchor;
 
         if (!uri2)
-          uri2 = parseUri(servletUrl);
+          uri2 = parseUri($.golf.servletUrl);
 
         if (uri1.protocol == uri2.protocol 
             && uri1.authority == uri2.authority
             && uri1.directory.substr(0, uri2.directory.length) 
                 == uri2.directory) {
           if (uri1.queryKey.path) {
-            if (cloudfrontDomain.length)
-              uri = cloudfrontDomain[0]+uri.queryKey.path;
+            if ($.golf.cloudfrontDomain.length)
+              uri = $.golf.cloudfrontDomain[0]+uri.queryKey.path;
           } else if (uri1.anchor) {
             if (!uri1.anchor.match(/^\//)) {
               anchor = (curHash ? curHash : "/") + uri1.anchor;
@@ -697,8 +698,8 @@ if (serverside) {
             } else {
               anchor = uri1.anchor;
             }
-            if (serverside)
-              this.attr("href", servletUrl + anchor);
+            if ($.golf.serverside)
+              this.attr("href", $.golf.servletUrl + anchor);
           }
         }
       }; 
@@ -707,7 +708,7 @@ if (serverside) {
 
 // main jQ golf object
 
-$.golf = {
+$.extend($.golf, {
 
   jssTimeout: 10,
 
@@ -799,7 +800,7 @@ $.golf = {
     for (name in $.golf.components)
       $.golf.addComponent($.golf.components[name].html, name);
 
-    if (!window.forcebot) {
+    if (!$.golf.forcebot) {
       d("Loading styles/ directory...");
       $("head style").remove();
       for (name in $.golf.styles)
@@ -912,7 +913,7 @@ $.golf = {
     };
   }
 
-};
+});
 
 // Static jQuery methods
 

@@ -22,6 +22,10 @@
       <param-name>poolexpire</param-name>
       <param-value>__POOLEXPIRE__</param-value>
     </init-param>
+    <init-param>
+      <param-name>version</param-name>
+      <param-value>__GOLF_VERSION__</param-value>
+    </init-param>
   </servlet>
 
   <servlet-mapping>
