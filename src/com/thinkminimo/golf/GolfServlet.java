@@ -301,6 +301,7 @@ public class GolfServlet extends HttpServlet {
   private static String               mDevMode      = null;
   private static String               mPoolSize     = null;
   private static String               mPoolExpire   = null;
+  private static String               mAppVersion   = null;
   private static AtomicBoolean        mBotMutex     = new AtomicBoolean();
   private static ArrayList<String>    mForceProxy   = new ArrayList<String>();
   private static ArrayList<String>    mForceClient  = new ArrayList<String>();
@@ -316,6 +317,7 @@ public class GolfServlet extends HttpServlet {
     mDevMode    = config.getInitParameter("devmode");
     mPoolSize   = config.getInitParameter("poolsize");
     mPoolExpire = config.getInitParameter("poolexpire");
+    mAppVersion = config.getInitParameter("version");
 
     // default values
     mDevMode    = (mDevMode    != null ? mDevMode    : "true" );
@@ -504,32 +506,31 @@ public class GolfServlet extends HttpServlet {
       }
     } else {
       // on the client window.serverside must be false, and vice versa
-      page = page.replaceFirst("(window.serverside +=) [a-zA-Z_]+;", 
-          "$1 " + (server ? "true" : "false") + ";");
+      page = page.replaceFirst("__SVRSIDE__", (server ? "true" : "false"));
 
       // import the session ID into the javascript environment
-      page = page.replaceFirst("(window.sessionid +=) \"[a-zA-Z_]+\";", 
-          "$1 \"" + sid + "\";");
+      page = page.replaceFirst("__SESSID__", sid);
       
       // the servlet url (shenanigans here)
-      page = page.replaceFirst("(window.servletUrl +=) \"[a-zA-Z_]+\";", 
-          "$1 \"" + context.servletUrl + "\";");
+      page = page.replaceFirst("__SERVLET_URL__", context.servletUrl);
       
       // the url fragment (shenanigans here)
-      page = page.replaceFirst("(window.urlHash +=) \"[a-zA-Z_]+\";", 
-          "$1 \"" + context.urlHash + "\";");
+      page = page.replaceFirst("__URL_HASH__", context.urlHash);
       
       // bot mode forced?
-      page = page.replaceFirst("(window.forcebot +=) [a-zA-Z_]+;", 
-          "$1 " + context.s.getForceBot().toString() + ";");
+      page = page.replaceFirst("__FORCEBOT__",
+          context.s.getForceBot().toString());
       
       // proxy mode forced?
-      page = page.replaceFirst("(window.forceproxy +=) [a-zA-Z_]+;", 
-          "$1 " + context.s.getForceProxy().toString() + ";");
+      page = page.replaceFirst("__FORCEPROXY__",
+          context.s.getForceProxy().toString());
       
       // client mode forced?
-      page = page.replaceFirst("(window.forceclient +=) [a-zA-Z_]+;", 
-          "$1 " + context.s.getForceClient().toString() + ";");
+      page = page.replaceFirst("__FORCECLIENT__",
+          context.s.getForceClient().toString());
+      
+      // the golf version
+      page = page.replaceFirst("__GOLF_VERSION__", mAppVersion);
     }
 
     // no dtd for serverside because it breaks the xml parser

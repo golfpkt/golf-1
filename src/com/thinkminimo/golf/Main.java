@@ -107,6 +107,7 @@ public class Main
   private   static String             mNewHtml        = null;
 
   private   static String             mAppName        = null;
+  private   static String             mAppVersion     = null;
 
   private   static HashMap<String, String> mApps      = null;
   private   static HashMap<String, String> mBackends  = null;
@@ -121,11 +122,12 @@ public class Main
     mApps       = new HashMap<String, String>();
     mBackends   = new HashMap<String, String>();
     mCfDomains  = new RingList<String>();
+    mAppVersion = getResourceAsString("version").replaceFirst("\n", "");
 
     // process single flag command lines
 
     if (argv[0].equals("--version")) {
-      System.out.print(getResourceAsString("version"));
+      System.out.println(mAppVersion);
       System.exit(0);
     } 
 
@@ -502,6 +504,7 @@ public class Main
       sh1.setInitParameter("devmode",     o.getOpt("devmode"));
       sh1.setInitParameter("poolsize",    o.getOpt("pool-size"));
       sh1.setInitParameter("poolexpire",  o.getOpt("pool-expire"));
+      sh1.setInitParameter("version",     mAppVersion);
 
       cx1.addServlet(sh1, "/*");
     }
@@ -629,6 +632,7 @@ public class Main
                       .replaceAll("__DESCRIPTION__",    o.getOpt("description"))
                       .replaceAll("__POOLSIZE__",       o.getOpt("pool-size"))
                       .replaceAll("__POOLEXPIRE__",     o.getOpt("pool-expire"))
+                      .replaceAll("__GOLF_VERSION__",   mAppVersion)
                       .replaceAll("__DEVMODE__",        o.getOpt("devmode"));
 
       // setup the ant build file

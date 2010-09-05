@@ -3,19 +3,22 @@
     <title> </title>
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
     <meta name="robots" content="noindex,nofollow"/>
-    <script type="text/javascript">
-      window.serverside       = __SVRSIDE__;
-      window.sessionid        = "__SESSID__";
-      window.servletUrl       = "__SERVLET_URL__";
-      window.urlHash          = "__URL_HASH__";
-      window.devmode          = __DEVMODE__;
-      window.forcebot         = __FORCEBOT__;
-      window.forceproxy       = __FORCEPROXY__;
-      window.forceclient      = __FORCECLIENT__;
-      window.restBackends     = __RESTBACKENDS__;
-      window.cloudfrontDomain = __CLOUDFRONTDOMAIN__;
-    </script>
     <script type="text/javascript" src="?path=jquery.js"></script>
+    <script type="text/javascript">
+      $.golf = {
+        version          : "__GOLF_VERSION__",
+        serverside       : __SVRSIDE__,
+        sessionid        : "__SESSID__",
+        servletUrl       : "__SERVLET_URL__",
+        urlHash          : "__URL_HASH__",
+        devmode          : __DEVMODE__,
+        forcebot         : __FORCEBOT__,
+        forceproxy       : __FORCEPROXY__,
+        forceclient      : __FORCECLIENT__,
+        restBackends     : __RESTBACKENDS__,
+        cloudfrontDomain : __CLOUDFRONTDOMAIN__
+      };
+    </script>
     <script type="text/javascript" src="?path=jquery.address.js"></script>
     <script type="text/javascript" src="?path=jquery.golf.js"></script>
     <script type="text/javascript" src="?path=components.js"></script>
