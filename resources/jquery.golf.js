@@ -1,3 +1,11 @@
+/*
+ * Golf Web Framework
+ * http://golf.github.com/
+ *
+ * Copyright (c) 2010 Micha Niskin
+ * Dual licensed under the MIT and GPL licenses.
+ *
+ */
 (function($) {
 
 function toJson(obj) {
@@ -321,7 +329,9 @@ var onHistoryChange = (function() {
     if (hash && hash != lastHash) {
       lastHash = hash;
       hash = hash.replace(/^\/+/, "/");
-      $.golf.location.hash = String(hash+"/").replace(/\/+$/, "/");
+      $.golf.location.hash    = String(hash+"/").replace(/\/+$/, "/");
+      $.golf.location.params  = 
+          String($.golf.location.hash).replace(/(^\/|\/$)/g,"").split("/");
       window.location.hash = "#"+$.golf.location.hash;
       $.golf.route(hash, b);
     }
@@ -924,14 +934,6 @@ $.Import = function(name) {
 };
 
 $.require = $.golf.require($);
-
-$.golf.location.params = function(i) {
-  var p = String($.golf.location.hash).replace(/(^\/|\/$)/g,"").split("/");
-  if (i == null)
-    return p;
-  else
-    return p[(p.length + i) % p.length];
-};
 
 // jQuery onload handler
 
