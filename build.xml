@@ -3,20 +3,20 @@
   <!-- use defaults unless already set by included configuration files -->
   <property name="vendor.namespace" value="com.thinkminimo"/>
   <property name="app.name"         value="golf"/>
-  <property name="app.version.in"   value="0.4"/>
-  <property name="app.release"      value=""/>
+  <property name="version"          value="0.4"/>
+  <property name="release"          value=""/>
   <property name="app.vendor"       value="thinkminimo.com"/>
 
   <!-- load environment variables into the 'env' property -->
   <property environment="env"/>
 
   <!-- set remaining properties -->
-  <condition property="app.version" value="${app.version.in}" else="0.0">
-    <length string="${app.version.in}" trim="true" when="greater" length="0"/>
+  <condition property="app.version" value="${version}" else="0.0">
+    <length string="${version}" trim="true" when="greater" length="0"/>
   </condition>
   <condition property="app.fullversion" 
-    value="${app.version}-${app.release}" else="${app.version}">
-    <length string="${app.release}" trim="true" when="greater" length="0"/>
+    value="${app.version}-${release}" else="${app.version}">
+    <length string="${release}" trim="true" when="greater" length="0"/>
   </condition>
 
   <property name="app.base"         value="${vendor.namespace}.${app.name}"/>
@@ -81,8 +81,14 @@
     </javac>
   </target>
 
-  <target name="jar" depends="compile" 
-    description="Create jar file.">
+  <target name="version" depends="clean"
+    description="Change the project version.">
+    <!-- Write new version info to the version file. -->
+    <echo file="${appversion.dist}">${app.fullversion}</echo>
+    <antcall target="dist"/>
+  </target>
+
+  <target name="jar" depends="compile" description="Create jar file.">
     <!-- Create the classes zip file -->
     <zip destfile="${build.home}/classes.zip">
       <fileset dir="${build.home}">
@@ -149,7 +155,6 @@
 java -jar "$(dirname "$0")/${app.fullname}.jar" "$@"
 </echo>
     <chmod file="${build.home}/golf" perm="ugo+rx"/>
-    <echo file="${appversion.dist}">${app.fullversion}</echo>
     <zip destfile="${dist.home}/golf.zip">
       <zipfileset file="${jarfile.dist}"/>
       <zipfileset file="${build.home}/golf" filemode="755"/>
