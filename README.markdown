@@ -1,7 +1,7 @@
 The Golf Web Application Server
 ===============================
 
-  <object width="640" height="385"><param name="movie" value="http://www.youtube.com/v/4cmWRTVOBpo?fs=1&amp;hl=en_US"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/4cmWRTVOBpo?fs=1&amp;hl=en_US" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385"></embed></object>
+<object width="640" height="385"><param name="movie" value="http://www.youtube.com/v/4cmWRTVOBpo?fs=1&amp;hl=en_US"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/4cmWRTVOBpo?fs=1&amp;hl=en_US" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="640" height="385"></embed></object>
 
 Golf is a web application server. It provides a way to build and deploy JavaScript driven webapps without sacrificing accessibility to JavaScript-disabled browsers (search engines, for example). By making dynamic content and behaviors fully accessible, Golf apps are designed from the ground up as clientside applications. As such, they are able to take full advantage of a powerful, rich JavaScript runtime environment. Golf both simplifies and adds power to the process of writing apps for the web.
 
