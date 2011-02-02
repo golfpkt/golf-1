@@ -19,8 +19,6 @@ import java.lang.reflect.Constructor;
 
 import net.sourceforge.htmlunit.corejs.javascript.ErrorReporter;
 import net.sourceforge.htmlunit.corejs.javascript.EvaluatorException;
-import com.yahoo.platform.yui.compressor.CssCompressor;
-import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
