@@ -40,6 +40,16 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>jboss</id>
+      <url>https://repository.jboss.org/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -83,6 +93,11 @@
       <artifactId>commons-fileupload</artifactId>
       <version>1.2.2</version>
     </dependency>
+    <dependency>
+      <groupId>gnu-getopt</groupId>
+      <artifactId>getopt</artifactId>
+      <version>1.0.13</version>
+    </dependency>    
   </dependencies>
 
   <build>
