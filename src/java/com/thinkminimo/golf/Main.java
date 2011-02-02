@@ -208,12 +208,6 @@ public class Main
       "application into a war file for deployment to a servlet container "+
       "for production. These options govern how this is done."
     ).addFlag(
-      "compress-js",
-      "Whether to yuicompress javascript resource files (production only)."
-    ).addFlag(
-      "compress-css",
-      "Whether to yuicompress css resource files (production only)."
-    ).addFlag(
       "war",
       "If present, create war file instead of starting embedded servlet "+
       "container."
@@ -286,8 +280,6 @@ public class Main
     o.setOpt("pool-expire",   String.valueOf(NUM_VMEXPIRE));
     o.setOpt("cloudfronts",   String.valueOf(NUM_CFDOMAINS));
     o.setOpt("cfdomains",     "[]");
-    o.setOpt("compress-js",   "false");
-    o.setOpt("compress-css",  "false");
     o.setOpt("war",           "false");
 
     // parse command line
@@ -746,9 +738,9 @@ public class Main
       String src = sb.toString();
 
       if (key.endsWith(".js"))
-        src = injectCloudfrontUrl(compressJs(src, key));
+        src = injectCloudfrontUrl(src);
       else if (key.endsWith(".css"))
-        src = injectCloudfrontUrl(compressCss(src, key));
+        src = injectCloudfrontUrl(src);
       else if (key.endsWith(".html"))
         src = injectCloudfrontUrl(src);
 
@@ -1137,26 +1129,6 @@ public class Main
     result = result.replaceAll("/\\*.*\\*/", "");
     result = result.trim();
 
-    if (!o.getFlag("devmode"))
-      result = compressCss(result, fileName);
-
-    return result;
-  }
-
-  public static String compressCss(String in, String filename) {
-    if (!o.getFlag("compress-css"))
-      return in;
-
-    String result = in;
-    try {
-      CssCompressor css = new CssCompressor(new StringReader(in));
-
-      StringWriter out = new StringWriter();
-      css.compress(out, -1);
-      result = out.toString();
-    } catch (Exception e) {
-      System.err.println("golf: "+filename+" not compressed: "+e.toString());
-    }
     return result;
   }
 
@@ -1190,58 +1162,9 @@ public class Main
         throw new Exception(result);
     }
 
-    if (!o.getFlag("devmode"))
-      result = compressJs(result, filename);
-
     return result;
   }
 
-  private static String compressJs(String in, String filename) {
-    if (!o.getFlag("compress-js"))
-      return in;
-
-    String result = in;
-
-    try {
-      final String cn = filename;
-      
-      ErrorReporter errz = new ErrorReporter() {
-        public void warning(String message, String sourceName,
-            int line, String lineSource, int lineOffset) {
-          if (line < 0) {
-            System.err.println(cn+": warning:\n"+message+"\n");
-          } else {
-            System.err.println(cn+": warning:\n"+line+':'+lineOffset+ 
-              ':'+message+"\n");
-          }
-        }
-        public void error(String message, String sourceName,
-              int line, String lineSource, int lineOffset) {
-          if (line < 0) {
-            System.err.println(cn+": error:\n"+message+"\n");
-          } else {
-            System.err.println(cn+": error:\n"+line+':'+lineOffset+
-              ':'+message+"\n");
-          }
-        }
-        public EvaluatorException runtimeError(String message, 
-            String sourceName, int line, String lineSource, int lineOffset) {
-          error(message, sourceName, line, lineSource, lineOffset);
-          return new EvaluatorException(message);
-        }
-      };
-
-      JavaScriptCompressor js = 
-        new JavaScriptCompressor(new StringReader(in), errz);
-
-      StringWriter out = new StringWriter();
-      js.compress(out, -1, false, false, false, true);
-      result = out.toString().replace("\n", "\\n");
-    } catch (Exception e) {
-      System.err.println("golf: "+filename+" not compressed: "+e.toString());
-    }
-    return result;
-  }
 
   private void cacheResourcesAws(File file, String path) throws Exception {
     if (path.startsWith("/.")         || 
