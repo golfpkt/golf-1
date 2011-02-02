@@ -1,10 +1,5 @@
-*.swp
-*.swo
-*.war
 *~
-.DS_Store
-hs_err_pid*
-build/*
-dist/*
-docs/api/*
-docs/api
+/.DS_Store
+/classes
+/lib
+/target
