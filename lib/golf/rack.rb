@@ -6,12 +6,12 @@ module Golf
     end
 
     def call(env)
-      #compile it before we pass it to static
-      #Golf::Compiler.compile!(env)
-      ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => '5'}, ['asasd']]
-      #@app.call(env) if @app
+      if env["REQUEST_METHOD"] == "GET" and env["PATH_INFO"] == "/component.js"
+        ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => '5'}, ['asasd']]
+      else
+        @app.call if @app
+      end
     end
-    
   end
 end
 
