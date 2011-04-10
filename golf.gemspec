@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.executables = ['golf']
   s.rubyforge_project = "golf"
 
-  s.files         = `git ls-files`.split("\n")
+  s.files         = `git ls-files`.split("\n").select { |x| !x.include?('golf-java')
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
