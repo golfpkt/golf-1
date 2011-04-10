@@ -8,3 +8,4 @@ build/*
 dist/*
 docs/api/*
 docs/api
+*.gem
