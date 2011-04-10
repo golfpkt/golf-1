@@ -9,7 +9,7 @@ module Golf
       if env["REQUEST_METHOD"] == "GET" and env["PATH_INFO"] == "/component.js"
         ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => '5'}, ['asasd']]
       else
-        @app.call if @app
+        @app.call(env) if @app
       end
     end
   end
