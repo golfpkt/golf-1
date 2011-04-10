@@ -1,0 +1,16 @@
+PATH
+  remote: .
+  specs:
+    golf (0.0.1)
+      thor
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    thor (0.14.6)
+
+PLATFORMS
+  java
+
+DEPENDENCIES
+  golf!

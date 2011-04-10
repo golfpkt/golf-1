@@ -1,0 +1,22 @@
+<div>
+
+  <style type="text/golf">
+  </style>
+
+  <script type="text/golf">
+    function() {
+      var MyThing = $.require("mylib").MyThing;
+      var m = new MyThing();
+
+      $("p").text("this is awesome");
+
+      this.update_p = function(what) {
+        $("p").text(what);
+      }
+    }
+  </script>
+
+
+  <h1>Hello, world.</h1>
+  <p>This is a test!</p>
+</div>
