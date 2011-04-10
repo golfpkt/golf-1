@@ -8,7 +8,7 @@ module Golf
     def call(env)
       #compile it before we pass it to static
       #Golf::Compiler.compile!(env)
-      ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => '5'}, 'asasd']
+      ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => '5'}, ['asasd']]
       #@app.call(env) if @app
     end
     
