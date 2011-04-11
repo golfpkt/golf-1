@@ -7,7 +7,7 @@ module Golf
     end
 
     def call(env)
-      if env["REQUEST_METHOD"] == "GET" and env["PATH_INFO"] == "/component.js"
+      if env["REQUEST_METHOD"] == "GET" and env["PATH_INFO"] == "/components.js"
         result = @compiler.generate_componentsjs
         ['200', { 'Content-Type' => 'application/javascript', 'Content-Length' => result.length.to_s}, [result]]
       else

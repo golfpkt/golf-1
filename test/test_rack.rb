@@ -8,7 +8,7 @@ class RackTest < Test::Unit::TestCase
   end
 
   def test_component_regeneration
-    get "/component.js"
+    get "/components.js"
     assert last_response.ok?
   end
 

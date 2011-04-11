@@ -6,6 +6,7 @@ module Golf
     end
 
     def generate_componentsjs
+      puts "compiling components in #{@golfpath}..."
       component_preamble = 'jQuery.golf.components='
       components = {}
       if File.exists?(@golfpath) and File.directory?(@golfpath)
