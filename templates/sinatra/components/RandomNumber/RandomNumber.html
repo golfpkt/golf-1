@@ -1,0 +1,16 @@
+<div>
+  <style type="text/golf">
+  </style>
+  <script type="text/golf">
+    function() {
+    var fetch_number = function(){ $.get('/random-api-method', {}, function(data){ $("#result").text(data); }) };
+    
+    fetch_number();
+    $("#generator_btn").click(fetch_number);
+    
+    }
+  </script>
+  <button id="generator_btn">Ask for a random number</button>
+  <div id="result"></div>
+
+</div>
