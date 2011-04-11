@@ -1,0 +1,16 @@
+<li>
+  <style type="text/golf">
+    span.user {
+      color: green;
+    }
+  </style>
+
+  <script type="text/golf">
+    function(tweet) {
+      $(".user").text(tweet.from_user);
+      $(".text").text(tweet.text);
+    }
+  </script>
+
+  <span class="user">A user</span> says: <span class="text">Some things.</span>
+</li>
