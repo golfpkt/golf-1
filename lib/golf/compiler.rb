@@ -3,7 +3,7 @@ module Golf
 
     def initialize(golfpath = ".")
       puts "starting up in #{golfpath}"
-      @golfpath = golfpath
+      @golfpath = "#{golfpath}/golfapp"
     end
 
     def generate_componentsjs
@@ -51,12 +51,12 @@ module Golf
     end
 
     def package_name(path)
-      path_arr = path.split('/')
-      i = path_arr.index('components')
-      name_segment = (path_arr.length - 1) - i
-      path_arr.slice(i + 1, name_segment - 1).join('.')
+      if path.include?('golfapp/components')
+        path.match(/golfapp\/components\/(.*)/)
+        component_path = $1
+        component_path.split('/')[0...-1].join('.')
+      end
     end
-
 
   end
 end
