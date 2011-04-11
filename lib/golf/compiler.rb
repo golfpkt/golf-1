@@ -1,7 +1,7 @@
 module Golf
   class Compiler
 
-    def initialize(golfpath = "golfapp/components")
+    def initialize(golfpath = "components")
       @golfpath = golfpath
     end
 

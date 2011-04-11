@@ -12,6 +12,15 @@ class RackTest < Test::Unit::TestCase
     assert last_response.ok?
   end
 
+  def test_resource_serving
+    get "/jquery.js"
+    assert last_response.ok?
 
+    get "/jquery.golf.js"
+    assert last_response.ok?
+
+    get "/"
+    assert last_response.ok?
+  end
 
 end
