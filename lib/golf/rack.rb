@@ -14,7 +14,7 @@ module Golf
 
       if File.exists?(env["PATH_INFO"].sub('/','')) and env["PATH_INFO"] != "/"
         mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
-        result = File.read(env["PATH_INFO"])
+        result = File.read(env["PATH_INFO"].sub('/',''))
         return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
       end
 
