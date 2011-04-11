@@ -10,6 +10,7 @@ module Golf
     end
 
     def call(env)
+      code = "200"
       case env["PATH_INFO"]
       when "/"
         mime = MIME_TYPES[".html"]
@@ -23,9 +24,10 @@ module Golf
         unless result
           mime = 'text/plain'
           result = 'not found'
+          code = "404"
         end
       end
-      return ['200', { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
+      return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
     end
   end
   
