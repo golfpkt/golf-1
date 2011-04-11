@@ -1,0 +1,29 @@
+<div>
+  <style type="text/golf">
+  </style>
+
+  <script type="text/golf">
+    function(query) {
+      var search = $.require("twitter").search;
+
+      search(query, function(i, tweet) {
+        $(".results").append(new Component.golf.twitter.Tweet(tweet));
+        $(".numresults").text(i+1);
+      });
+
+      $("form").submit(function() {
+        $.golf.location("/"+$("input[name='query']").val()+"/");
+      });
+    }
+  </script>
+
+  <div class="content">
+    <h1>Twitter Search</h1>
+    <form>
+      <input type="text" name="query"/>
+      <input type="submit"/>
+    </form>
+    <p><span class="numresults">0</span> results:</p>
+    <ul class="results"/>
+  </div>
+</div>
