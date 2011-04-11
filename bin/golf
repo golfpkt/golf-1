@@ -5,4 +5,3 @@ require "rubygems"
 require "golf"
 
 Golf::CLI.start
-
