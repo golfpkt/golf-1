@@ -1,4 +1,8 @@
 GolfExample::Application.routes.draw do
+
+  mount Golf::Rack.new, :at => "/golf"
+
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

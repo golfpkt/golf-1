@@ -10,6 +10,14 @@ module Golf
     end
 
     def call(env)
+      if env["PATH_INFO"] == ""
+        if env["REQUEST_URI"].split('').last != "/"
+          return [301, {'Location' => env["REQUEST_URI"] << "/"}, ['See Ya!']] 
+        else
+          env["PATH_INFO"] = "/"
+        end
+      end
+
       code = "200"
       
       #pass through for overrides
