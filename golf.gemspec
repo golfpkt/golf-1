@@ -11,7 +11,9 @@ Gem::Specification.new do |s|
   s.homepage    = "http://golf.github.com"
   s.summary     = %q{Component based front end JS Framework}
   s.description = %q{Golf lets you write your interface in terms of reusable, simple components.}
+
   s.add_dependency('thor')
+  s.add_dependency('json')
 
   s.bindir = 'bin'
   s.executables = ['golf']
