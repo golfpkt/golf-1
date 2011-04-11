@@ -29,6 +29,12 @@ module Golf
     def compile(dir)
       Golf::Compiler.compile!
     end
+    
+    desc "version", "Output the version number"
+    def version
+      puts Golf::VERSION
+    end
+
 
   end
   
