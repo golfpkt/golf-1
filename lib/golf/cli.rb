@@ -13,7 +13,7 @@ module Golf
 
     desc "new [NAME]", "Creates new golf app"
     def new(name)
-      directory("template", name)
+      directory("templates/new", name)
     end
 
     desc "server", "Run the golf app"
