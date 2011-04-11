@@ -19,7 +19,7 @@ module Golf
         directory("templates/#{template}", name)
       end
     end
-
+    
     desc "raw", "Dumps a raw hello world golfapp into current dir"
     def raw
       directory("templates/raw", "golfapp")
@@ -37,7 +37,7 @@ module Golf
           package_name = name
         end
         create_file "components/#{package_name}/#{component_name}.html" do
-          File.read("templates/component/Component.html")
+          File.read(File.expand_path("../../../templates/component/Component.html", __FILE__))
         end
       end
     end
