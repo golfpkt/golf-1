@@ -1,7 +1,4 @@
-require 'bundler'
+require 'rubygems'
 require 'golf'
-require 'rack'
-require 'rack/contrib'
 
-use Golf::Rack
-run Rack::NotFound.new('404.txt')
+run Golf::Rack.new
