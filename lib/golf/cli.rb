@@ -11,7 +11,7 @@ module Golf
       File.expand_path("../../../", __FILE__)
     end
 
-    desc "new [NAME] (optional)[TEMPLATE]", "Creates new golf app, takes NAME and optionally TEMPLATE"
+    desc "new [NAME] (optional)[TEMPLATE]", "Creates new, rack-based golf app, takes NAME and optionally TEMPLATE [twitter, sinatra]"
     def new(name, template = false)
       unless template
         directory("templates/new", name)
@@ -19,6 +19,12 @@ module Golf
         directory("templates/#{template}", name)
       end
     end
+
+    desc "raw", "Dumps a raw hello world golfapp into current dir"
+    def raw
+      directory("templates/raw", "golfapp")
+    end
+
 
     desc "server", "Run the golf app"
     def server
