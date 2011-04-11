@@ -2,8 +2,10 @@ module Golf
   class Compiler
 
     def initialize(golfpath = ".")
-      puts "starting up in #{golfpath}"
       @golfpath = "#{golfpath}/golfapp"
+      puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
+      components = "#{@golfpath}/components"
+      puts "golf #{Golf::VERSION}: is valid golfapp?: #{File.exists?(components)}"
     end
 
     def generate_componentsjs
