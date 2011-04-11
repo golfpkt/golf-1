@@ -2,6 +2,7 @@ module Golf
   class Compiler
 
     def initialize(golfpath = ".")
+      puts "starting up in #{golfpath}"
       @golfpath = golfpath
     end
 
@@ -10,39 +11,52 @@ module Golf
     end
 
     def component_json
-      puts "compiling components in #{@golfpath}..."
-      components = traverse("#{@golfpath}/components", "html")
-      JSON.dump(components)
+      traverse("#{@golfpath}/components", "html")
     end
 
     def res_json
-      JSON.dump({})
+      results = { "Gemfile" => "Gemfile", "plugins" => {},"config.ru" => "config.ru", "404.txt" => "404.txt" }
+      Dir["#{@golfpath}/plugins/*.js"].each do |path|
+        results["plugins"] = results["plugins"].merge({ File.basename(path) => "plugins/#{File.basename(path)}"})
+      end
+      JSON.dump(results)
     end
     
     def plugin_json
-      JSON.dump({})
+      traverse("#{@golfpath}/plugins", "js")
     end
 
     def script_json
-      JSON.dump({})
+      traverse("#{@golfpath}/scripts", "js")
     end
 
     def style_json
-      JSON.dump({})
+      traverse("#{@golfpath}/styles", "css")
     end
 
     def traverse(dir, type)
       results = {}
       if File.exists?(dir) and File.directory?(dir)
         Dir["#{dir}/**/*.#{type}"].each do |path|
-          name = path.split('/').last.gsub(".#{type}",'')
+          if type == "html"
+            name = package_name(path)
+          else
+            name = path.split('/').last.gsub(".#{type}",'')
+          end
           data = File.read(path)
           results = results.merge({ name => { "name" => name, "#{type}" => data }})
         end
       end
-      results
+      JSON.dump(results)
     end
 
-    
+    def package_name(path)
+      path_arr = path.split('/')
+      i = path_arr.index('components')
+      name_segment = (path_arr.length - 1) - i
+      path_arr.slice(i + 1, name_segment - 1).join('.')
+    end
+
+
   end
 end
