@@ -7,8 +7,8 @@
 
   <script type="text/golf">
     function(tweet) {
-      $(".user").text(tweet.from_user);
-      $(".text").text(tweet.text);
+      $(".user").html("<span>"+tweet.from_user+"</span>");
+      $(".text").html("<span>"+tweet.text+"</span>");
     }
   </script>
 
