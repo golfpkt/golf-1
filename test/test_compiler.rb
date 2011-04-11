@@ -3,7 +3,7 @@ require 'test_helper'
 class CompilerTest < Test::Unit::TestCase
 
   def setup
-    @compiler = Golf::Compiler.new(File.expand_path("../data/components", __FILE__))
+    @compiler = Golf::Compiler.new(File.expand_path("../data", __FILE__))
   end
 
 

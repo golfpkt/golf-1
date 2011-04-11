@@ -1,7 +1,7 @@
 module Golf
   class Compiler
 
-    def initialize(golfpath = "components")
+    def initialize(golfpath = ".")
       @golfpath = golfpath
     end
 
@@ -11,14 +11,7 @@ module Golf
 
     def component_json
       puts "compiling components in #{@golfpath}..."
-      components = {}
-      if File.exists?(@golfpath) and File.directory?(@golfpath)
-        Dir["#{@golfpath}/**/*.html"].each do |path|
-          name = path.split('/').last.gsub('.html','')
-          html = File.read(path)
-          components = components.merge({ name => { "name" => name, "html" => html }})
-        end
-      end
+      components = traverse("#{@golfpath}/components", "html")
       JSON.dump(components)
     end
 
@@ -38,7 +31,17 @@ module Golf
       JSON.dump({})
     end
 
-
+    def traverse(dir, type)
+      results = {}
+      if File.exists?(dir) and File.directory?(dir)
+        Dir["#{dir}/**/*.#{type}"].each do |path|
+          name = path.split('/').last.gsub(".#{type}",'')
+          data = File.read(path)
+          results = results.merge({ name => { "name" => name, "#{type}" => data }})
+        end
+      end
+      results
+    end
 
     
   end
