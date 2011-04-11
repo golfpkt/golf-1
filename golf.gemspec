@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency('thor')
   s.add_dependency('json')
+  s.add_dependency('rack')
 
   s.bindir = 'bin'
   s.executables = ['golf']
