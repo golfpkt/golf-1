@@ -41,6 +41,7 @@ function Component() {
 function Debug(prefix) {
   return function(text) {
     text = prefix+": "+text;
+    window.devmode = true;
     if (window.devmode && window.console && window.console.log)
       console.log(text);
     else if (window.serverside)
