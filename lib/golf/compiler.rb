@@ -6,8 +6,11 @@ module Golf
     end
 
     def generate_componentsjs
+      "jQuery.golf.components=#{component_json};jQuery.golf.res=#{res_json};jQuery.golf.plugins=#{plugin_json};jQuery.golf.scripts=#{script_json};jQuery.golf.styles=#{style_json};jQuery.golf.setupComponents();"
+    end
+
+    def component_json
       puts "compiling components in #{@golfpath}..."
-      component_preamble = 'jQuery.golf.components='
       components = {}
       if File.exists?(@golfpath) and File.directory?(@golfpath)
         Dir["#{@golfpath}/**/*.html"].each do |path|
@@ -16,8 +19,27 @@ module Golf
           components = components.merge({ name => { "name" => name, "html" => html }})
         end
       end
-      component_preamble << JSON.dump(components) << ';' << 'jQuery.golf.res={};jQuery.golf.plugins={};jQuery.golf.scripts={};jQuery.golf.styles={};jQuery.golf.setupComponents();'
+      JSON.dump(components)
     end
+
+    def res_json
+      JSON.dump({})
+    end
+    
+    def plugin_json
+      JSON.dump({})
+    end
+
+    def script_json
+      JSON.dump({})
+    end
+
+    def style_json
+      JSON.dump({})
+    end
+
+
+
     
   end
 end
