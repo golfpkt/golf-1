@@ -11,10 +11,21 @@ module Golf
 
     def call(env)
       code = "200"
+
+      if File.exists?(env["PATH_INFO"]) and env["PATH_INFO"] != "/"
+        mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
+        result = File.read(env["PATH_INFO"])
+        return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
+      end
+
       case env["PATH_INFO"]
       when "/"
         mime = MIME_TYPES[".html"]
-        result = @resources["/index.html"]
+        if File.exists?('index.html')
+          result = File.read('index.html')
+        else
+          result = @resources["/index.html"]
+        end
       when "/components.js"
         mime = MIME_TYPES[".js"]
         result = @compiler.generate_componentsjs
