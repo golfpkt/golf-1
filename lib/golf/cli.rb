@@ -24,7 +24,23 @@ module Golf
     def raw
       directory("templates/raw", "golfapp")
     end
-
+    
+    desc "generate [TYPE] [NAME]", "Generate stub code of TYPE for your already existing golfapp [component, plugin, script]"
+    def generate(type, name)
+      case type
+        when "component"
+        if name.include?('.')
+          component_name = name.split('.').last
+          package_name = name.gsub('.','/').split('/')[0...-1].join('/')
+        else
+          component_name = name
+          package_name = name
+        end
+        create_file "components/#{package_name}/#{component_name}.html" do
+          File.read("templates/component/Component.html")
+        end
+      end
+    end
 
     desc "server", "Run the golf app"
     def server
