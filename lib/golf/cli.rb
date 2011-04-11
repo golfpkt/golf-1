@@ -36,7 +36,7 @@ module Golf
           component_name = name
           package_name = name
         end
-        create_file "golfpp/components/#{package_name}/#{component_name}.html" do
+        create_file "golfapp/components/#{package_name}/#{component_name}.html" do
           File.read(File.expand_path("../../../templates/component/Component.html", __FILE__))
         end
       end
