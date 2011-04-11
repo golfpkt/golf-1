@@ -12,16 +12,14 @@ module Golf
     def call(env)
       code = "200"
       
-      if ['Gemfile','config.ru', 'Gemfile.lock'].include?(env["PATH_INFO"])
-        return [404, { 'Content-Type' => 'text/plain', 'Content-Length' => '9'}, ['not found']]
-      end
-
+      #pass through for overrides
       if File.exists?("golfapp/#{env["PATH_INFO"].sub('/','')}") and env["PATH_INFO"] != "/"
         mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
         result = File.read("golfapp/#{env["PATH_INFO"].sub('/','')}")
         return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
       end
 
+      #regular handling from gem resources/dynamic compilation
       case env["PATH_INFO"]
       when "/"
         mime = MIME_TYPES[".html"]
