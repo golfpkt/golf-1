@@ -16,17 +16,17 @@ module Golf
         return [404, { 'Content-Type' => 'text/plain', 'Content-Length' => '9'}, ['not found']]
       end
 
-      if File.exists?(env["PATH_INFO"].sub('/','')) and env["PATH_INFO"] != "/"
+      if File.exists?("golfapp/#{env["PATH_INFO"].sub('/','')}") and env["PATH_INFO"] != "/"
         mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
-        result = File.read(env["PATH_INFO"].sub('/',''))
+        result = File.read("golfapp/#{env["PATH_INFO"].sub('/','')}")
         return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
       end
 
       case env["PATH_INFO"]
       when "/"
         mime = MIME_TYPES[".html"]
-        if File.exists?('index.html')
-          result = File.read('index.html')
+        if File.exists?('golfapp/index.html')
+          result = File.read('golfapp/index.html')
         else
           result = @resources["/index.html"]
         end
