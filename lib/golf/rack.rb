@@ -12,7 +12,7 @@ module Golf
     def call(env)
       code = "200"
 
-      if File.exists?(env["PATH_INFO"]) and env["PATH_INFO"] != "/"
+      if File.exists?(env["PATH_INFO"].sub('/','')) and env["PATH_INFO"] != "/"
         mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
         result = File.read(env["PATH_INFO"])
         return [code, { 'Content-Type' => mime, 'Content-Length' => result.length.to_s}, [result]]
