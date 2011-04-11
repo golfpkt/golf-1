@@ -11,6 +11,10 @@ module Golf
 
     def call(env)
       code = "200"
+      
+      if ['Gemfile','config.ru', 'Gemfile.lock'].include?(env["PATH_INFO"])
+        return [404, { 'Content-Type' => 'text/plain', 'Content-Length' => '9'}, ['not found']]
+      end
 
       if File.exists?(env["PATH_INFO"].sub('/','')) and env["PATH_INFO"] != "/"
         mime = MIME_TYPES[".#{env["PATH_INFO"].split('.').last}"]
