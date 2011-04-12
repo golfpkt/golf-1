@@ -836,6 +836,7 @@ $.golf = {
         type: "route_error",
         message: e.toString()
       });
+      d(e.stack);
       $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
     }
   },
