@@ -554,6 +554,7 @@ if (serverside) {
           try {
             oldfn.apply(this, argv);
           } catch(e) {
+            d(e.stack);
             $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
           }
           return false;
