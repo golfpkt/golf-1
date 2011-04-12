@@ -42,6 +42,9 @@ module Golf
         Dir["#{dir}/**/*.#{type}"].each do |path|
           if type == "html"
             name = package_name(path)
+            arr = path.split('/')
+            last_two = arr.slice(arr.length - 2 ,2)
+            next if last_two[0] != last_two[1].gsub('.html','')
           else
             name = path.split('/').last.gsub(".#{type}",'')
           end

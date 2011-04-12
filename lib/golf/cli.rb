@@ -32,12 +32,13 @@ module Golf
         if name.include?('.')
           component_name = name.split('.').last
           package_name = name.gsub('.','/').split('/')[0...-1].join('/')
+          create_file "golfapp/components/#{package_name}/#{component_name}/#{component_name}.html" do
+            File.read(File.expand_path("../../../templates/component/Component.html", __FILE__))
+          end
         else
-          component_name = name
-          package_name = name
-        end
-        create_file "golfapp/components/#{package_name}/#{component_name}.html" do
-          File.read(File.expand_path("../../../templates/component/Component.html", __FILE__))
+          create_file "golfapp/components/#{name}/#{name}.html" do
+            File.read(File.expand_path("../../../templates/component/Component.html", __FILE__))
+          end
         end
       end
     end
