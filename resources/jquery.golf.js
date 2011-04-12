@@ -395,6 +395,7 @@ function componentConstructor(name) {
 
     if (cmp) {
       obj._dom = cmp.dom.clone();
+      obj._dom.data("_golf_component", obj);
       obj._dom.data("_golf_constructing", true);
       obj.require = $fake.require;
       checkForReservedClass(obj._dom.children().find("*"));
@@ -591,6 +592,11 @@ if (serverside) {
             $(this).removeData("_golf_prepared");
           });
           jss.mark(this);
+          $("*", e).each(function(index, elem) {
+            var cmp = $(elem).data("_golf_component");
+            if (cmp instanceof Component && cmp.onAppend)
+              cmp.onAppend();
+          });
           if (a instanceof Component && a.onAppend)
             a.onAppend();
           return $(this);
@@ -600,11 +606,19 @@ if (serverside) {
 
     $.fn._golf_remove = $.fn.remove;
     $.fn.remove = function() { 
-      $("*", this).add([this]).each(function() {
+      var cmps = [];
+      $("*", this).add([this]).each(function(index, elem) {
+        var cmp = $(elem).data("_golf_component");
+        if (cmp)
+          cmps.push({component: cmp, dom: elem});
         if ($(this).attr("golfid"))
           $.golf.events[$(this).attr("golfid")] = [];
       });
-      return $.fn._golf_remove.call(this);
+      var ret = $.fn._golf_remove.call(this);
+      $.each(cmps, function(index, item) {
+        $(item.dom).data("_golf_component", item.component);
+      });
+      return ret;
     }; 
 
     $.each(
