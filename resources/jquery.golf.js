@@ -841,7 +841,7 @@ $.golf = {
   },
 
   errorPage: function(type, desc) {
-    $.get("?path=app_error.html", function(data) {
+    $.get("app_error.html", function(data) {
       $(".golfbody").empty().append(data);
       $(".golfbody .type").text(type);
       $(".golfbody .description").append(desc);
