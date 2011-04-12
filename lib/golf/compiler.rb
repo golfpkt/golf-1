@@ -39,7 +39,7 @@ module Golf
     def traverse(dir, type)
       results = {}
       if File.exists?(dir) and File.directory?(dir)
-        Dir["#{dir}/**/*.#{type}"].each do |path|
+        Dir["#{dir}/**/*.#{type}"].sort.reverse.each do |path|
           if type == "html"
             name = package_name(path)
             arr = path.split('/')
