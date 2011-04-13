@@ -23,6 +23,38 @@ module Golf
       JSON.dump(compile_res(@golfpath))
     end
 
+    # compile_res: This function creates a hash representation of
+    # the file structure relative to <dir>. The values are either
+    # hashes (for directories) or strings (for files). The string
+    # values are the path to the file relative to @golfpath.
+    # 
+    # Example: compile_res("#{@golfpath}/dir1")
+    #
+    # @golfpath/
+    #   |--dir1/
+    #   |    |--file1
+    #   |    |--file2
+    #   |    +--dir2/
+    #   |         |--file3
+    #   |         |--file4
+    #   |         +--dir3/
+    #   |              |--file5
+    #   |              +--file6
+    #   +--dir4/
+    #
+    # { 
+    #   file1 => "dir1/file1",
+    #   file2 => "dir1/file2",
+    #   dir2  => {
+    #     file3 => "dir1/dir2/file3",
+    #     file4 => "dir1/dir2/file4"
+    #     dir3  => {
+    #       file5 => "dir1/dir2/dir3/file5",
+    #       file6 => "dir1/dir2/dir3/file6"
+    #     }
+    #   }
+    # }
+    #
     def compile_res(dir)
       results = {}
       mypath  = dir.split('').last == "/" ? dir : dir+"/"
