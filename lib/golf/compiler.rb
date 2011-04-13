@@ -24,7 +24,7 @@ module Golf
       path    = "#{@golfpath}/"
       Find.find(@golfpath) do |path|
         start = @golfpath.length
-        e = path.slice(start+1, path.length-start-1)
+        e = path.slice(start, path.length-start)
         f = URI.escape(e)
         g = File.basename(e)
         h = File.dirname(e) == "." ? [] : File.dirname(e).split("/")
