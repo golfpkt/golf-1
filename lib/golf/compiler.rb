@@ -1,11 +1,15 @@
 module Golf
+
   class Compiler
+
+    require 'find'
 
     def initialize(golfpath = ".")
       @golfpath = "#{golfpath}/golfapp"
       puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
       components = "#{@golfpath}/components"
       puts "golf #{Golf::VERSION}: is valid golfapp?: #{File.exists?(components)}"
+      traverse_ls(@golfpath)
     end
 
     def generate_componentsjs
@@ -17,9 +21,24 @@ module Golf
     end
 
     def res_json
-      results = { "Gemfile" => "Gemfile", "plugins" => {},"config.ru" => "config.ru", "404.txt" => "404.txt" }
-      Dir["#{@golfpath}/plugins/*.js"].each do |path|
-        results["plugins"] = results["plugins"].merge({ File.basename(path) => "plugins/#{File.basename(path)}"})
+      results = {}
+      Find.find(dir) do |path|
+        e = path.slice(dir.length,path.length-dir.length)
+        f = URI.escape(e)
+        g = File.basename(e)
+        h = File.dirname(e) == "." ? [] : File.dirname(e).split("/")
+        if FileTest.directory?(path)
+          next
+        else
+          r2 = results
+          h.each { |i|
+            if ! r2[i]
+              r2[i] = {} 
+            end
+            r2 = r2[i]
+          }
+          r2[g] = f
+        end
       end
       JSON.dump(results)
     end
