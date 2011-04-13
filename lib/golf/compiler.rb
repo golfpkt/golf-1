@@ -19,14 +19,15 @@ module Golf
       traverse("#{@golfpath}/components", "html")
     end
 
-    def res_json
+    def res_json(dir = @golfpath)
       results = {}
-      path    = "#{@golfpath}/"
-      Find.find(@golfpath) do |path|
-        start = @golfpath.length
+      mypath  = dir.split('').last == "/" ? dir : dir+"/"
+      Find.find(mypath) do |path|
+        start = mypath.length
         e = path.slice(start, path.length-start)
         f = URI.escape(e)
         g = File.basename(e)
+
         h = File.dirname(e) == "." ? [] : File.dirname(e).split("/")
         if FileTest.directory?(path)
           next
