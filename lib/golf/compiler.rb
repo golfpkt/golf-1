@@ -22,7 +22,8 @@ module Golf
     def res_json
       results = {}
       Find.find(@golfpath) do |path|
-        e = path.slice(@golfpath.length+1,path.length-@golfpath.length)
+        start = @golfpath.length+1
+        e = path.slice(start, path.length-start)
         f = URI.escape(e)
         g = File.basename(e)
         h = File.dirname(e) == "." ? [] : File.dirname(e).split("/")
