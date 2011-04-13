@@ -19,7 +19,11 @@ module Golf
       traverse("#{@golfpath}/components", "html")
     end
 
-    def res_json(dir = @golfpath)
+    def res_json
+      JSON.dump(compile_res(@golfpath))
+    end
+
+    def compile_res(dir)
       results = {}
       mypath  = dir.split('').last == "/" ? dir : dir+"/"
       myroot  = @golfpath.split('').last == "/" ? @golfpath : @golfpath+"/"
