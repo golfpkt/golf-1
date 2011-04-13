@@ -22,13 +22,13 @@ module Golf
     def res_json(dir = @golfpath)
       results = {}
       mypath  = dir.split('').last == "/" ? dir : dir+"/"
+      myroot  = @golfpath.split('').last == "/" ? @golfpath : @golfpath+"/"
       Find.find(mypath) do |path|
-        start = mypath.length
-        e = path.slice(start, path.length-start)
+        e = path.slice(mypath.length, path.length-mypath.length)
+        r = path.slice(myroot.length, path.length-myroot.length)
         f = URI.escape(e)
         g = File.basename(e)
-
-        h = File.dirname(e) == "." ? [] : File.dirname(e).split("/")
+        h = File.dirname(r) == "." ? [] : File.dirname(r).split("/")
         if FileTest.directory?(path)
           next
         else
