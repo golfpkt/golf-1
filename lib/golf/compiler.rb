@@ -7,12 +7,16 @@ module Golf
     def initialize(golfpath = ".")
       @golfpath = "#{golfpath}/golfapp"
       puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
-      components = "#{@golfpath}/components"
-      puts "golf #{Golf::VERSION}: is valid golfapp?: #{File.exists?(components)}"
+      puts "golf #{Golf::VERSION}: is valid golfapp?: #{Golf::Compiler.valid?(@golfpath)}"
     end
 
+    def self.valid?(dir)
+      File.exists?("#{dir}/golfapp/components")
+    end
+
+
     def generate_componentsjs
-      "jQuery.golf.components=#{component_json};jQuery.golf.res=#{res_json};jQuery.golf.plugins=#{plugin_json};jQuery.golf.scripts=#{script_json};jQuery.golf.styles=#{style_json};jQuery.golf.setupComponents();"
+      "jQuery.golf.components=#{component_json};;jQuery.golf.res=#{res_json};;jQuery.golf.plugins=#{plugin_json};;jQuery.golf.scripts=#{script_json};;jQuery.golf.styles=#{style_json};;jQuery.golf.setupComponents();"
     end
 
     def component_json

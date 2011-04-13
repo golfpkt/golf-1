@@ -4,6 +4,7 @@ class CompilerTest < Test::Unit::TestCase
 
   def setup
     @compiler = Golf::Compiler.new(File.expand_path("../twitter_compiled", __FILE__))
+    @reference_file = File.read(File.expand_path("../twitter_compiled/golfapp/components.js", __FILE__))
   end
 
 

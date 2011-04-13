@@ -49,10 +49,25 @@ module Golf
     end
     
     desc "compile [DESTINATION]", "Compile the app into a directory"
-    def compile(dir)
-      Golf::Compiler.compile!
-    end
+    # move resources into destination from gem
+    # move golfapp/ over destination
+    # drop component.js into destination
     
+    def compile(dir)
+      if Golf::Compiler.valid?('.')
+        compiler = Golf::Compiler.new
+        gem_resources = File.expand_path("../../../resources", __FILE__)
+        directory(gem_resources, dir)
+        directory('golfapp/', dir)
+        create_file "#{dir}/components.js" do
+          compiler.generate_componentsjs
+        end
+      else
+        puts "golfapp/components not found"
+      end
+    end    
+
+
     desc "version", "Output the version number"
     def version
       puts Golf::VERSION
