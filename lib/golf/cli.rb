@@ -47,23 +47,18 @@ module Golf
     def server
       `rackup`
     end
-    
+
     desc "compile [DESTINATION]", "Compile the app into a directory"
-    # move resources into destination from gem
-    # move golfapp/ over destination
-    # drop component.js into destination
-    
     def compile(dir)
-      if Golf::Compiler.valid?('.')
+      if Golf::Compiler.valid?(self.destination_root)
         compiler = Golf::Compiler.new
-        gem_resources = File.expand_path("../../../resources", __FILE__)
-        directory(gem_resources, dir)
-        directory('golfapp/', dir)
+        directory('resources', dir)
+        directory("#{self.destination_root}/golfapp", dir)
         create_file "#{dir}/components.js" do
           compiler.generate_componentsjs
         end
       else
-        puts "golfapp/components not found"
+        puts "#{self.destination_root}/golfapp/components not found"
       end
     end    
 
