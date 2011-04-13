@@ -9,7 +9,6 @@ module Golf
       puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
       components = "#{@golfpath}/components"
       puts "golf #{Golf::VERSION}: is valid golfapp?: #{File.exists?(components)}"
-      traverse_ls(@golfpath)
     end
 
     def generate_componentsjs
