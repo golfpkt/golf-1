@@ -22,7 +22,7 @@ module Golf
     def res_json
       results = {}
       Find.find(@golfpath) do |path|
-        start = @golfpath.length+1
+        start = @golfpath.length
         e = path.slice(start, path.length-start)
         f = URI.escape(e)
         g = File.basename(e)
