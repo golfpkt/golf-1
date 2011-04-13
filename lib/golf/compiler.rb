@@ -46,6 +46,7 @@ module Golf
           r2[g] = f
         end
       end
+      results
     end
     
     def plugin_json
