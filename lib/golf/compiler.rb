@@ -113,13 +113,48 @@ module Golf
           else
             name = path.split('/').last.gsub(".#{type}",'')
           end
-          data = File.read(path)
+          data = filtered_read(path)
           results = results.merge({ name => { "name" => name, "#{type}" => data }})
         end
       end
       JSON.dump(results)
     end
-
+    
+    def filtered_read(path)
+      data = File.read(path)
+      if path.split('.').last == 'html'
+        data = filter_by_block(data)
+      end
+      data = filter_by_extension(data)
+      data
+    end
+    
+    def filter_by_block(data)
+      doc = Hpricot(data)
+      if doc
+        unfiltered_elements = doc.search('//*[@filter]')
+        if unfiltered_elements.count == 0
+          data
+        else
+          unfiltered_elements.each do |element|
+            filter = element.attributes["filter"]
+            filter_name = filter.capitalize.to_sym
+            if Golf::Filter.constants.include?(filter_name)
+              element.raw_string = Golf::Filter.const_get(filter_name).transform(element.to_s)
+              element.remove_attribute("filter")
+            end
+          end
+          return doc.to_s
+        end
+      else
+        data
+      end
+    end
+    
+    def filter_by_extension(data)
+      data
+    end
+    
     def package_name(path)
       if path.include?('golfapp/components')
         path.match(/golfapp\/components\/(.*)/)
