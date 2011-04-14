@@ -28,7 +28,13 @@ class CompilerTest < Test::Unit::TestCase
   def test_componentsjs_generation
     a = @reference.components
     b = JSON.parse @compiler.component_json
+    assert_equal a.keys.sort,b.keys.sort
     assert_equal a,b
+    puts a["HelloWorld"]["html"]
+    puts b["HelloWorld"]["html"]
+    a.keys.each do |key|
+      puts "#{key} should be #{a[key].hash}, but was #{b[key].hash}"
+    end
   end
 
   def test_res_generation

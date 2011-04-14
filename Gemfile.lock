@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     golf (0.4.14)
+      hpricot
       json
       rack
       thor
@@ -9,6 +10,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    hpricot (0.8.4)
     json (1.5.1)
     rack (1.2.2)
     rack-test (0.5.7)
