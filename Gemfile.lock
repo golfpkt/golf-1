@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    golf (0.4.14)
+    golf (0.5.2)
       hpricot
       json
       rack

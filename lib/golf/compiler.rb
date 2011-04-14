@@ -10,6 +10,10 @@ module Golf
       self.golfpath = "#{golfpath}/golfapp"
       puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
       puts "golf #{Golf::VERSION}: is valid golfapp?: #{Golf::Compiler.valid?(@golfpath)}"
+      puts "golf #{Golf::VERSION}: loading filters in #{golfpath}/filters"
+      Dir["#{golfpath}/filters/*.rb"].each do |path|
+        require path
+      end
     end
 
     def self.valid?(dir)
@@ -140,8 +144,9 @@ module Golf
             filter = element.attributes["filter"]
             filter_name = filter.capitalize.to_sym
             if Golf::Filter.constants.include?(filter_name)
-              element.raw_string = Golf::Filter.const_get(filter_name).transform(element.to_s)
-              element.remove_attribute("filter")
+              element.remove_attribute('filter')
+              res = Golf::Filter.const_get(filter_name).transform(element.to_s)
+              element.swap(res)
             end
           end
           return doc.to_s
