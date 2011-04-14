@@ -417,159 +417,31 @@ window.d          = Debug("GOLF");
 window.Debug      = Debug;
 window.Component  = Component;
 
-// serverside mods to jQuery
+// install overrides on jQ DOM manipulation methods to accomodate components
 
-if (serverside) {
+(function() {
 
-  if (!window.forcebot) {
-    $.fx.off = true;
-
-    $.fn.fadeIn = $.fn.slideDown = function(speed, callback) {
-      return $.fn.show.call(this, 0, callback);
-    };
-
-    $.fn.fadeOut = $.fn.slideUp = function(speed, callback) {
-      return $.fn.hide.call(this, 0, callback);
-    };
-
-    // this is problematic because the js css manipulations are not carried
-    // over in proxy mode; needs to be in a style tag maybe
-    //(function(fadeTo) {
-    //  jQuery.fn.fadeTo = function(speed, opacity, callback) {
-    //    return fadeTo.call(this, 0, opacity, callback);
-    //  };
-    //})(jQuery.fn.fadeTo);
-
-    $.fn.slideToggle = function(speed, callback) {
-      return $.fn.toggle.call(this, 0, callback);
-    };
-
-    $.fn.show = (function(show) {
-      return function(speed, callback) {
-        return show.call(this, 0, callback);
-      };
-    })($.fn.show);
-
-    $.fn.hide = (function(hide) {
-      return function(speed, callback) {
-        return hide.call(this, 0, callback);
-      };
-    })($.fn.hide);
-
+    // this is to prevent accidentally reloading the page
     $.fn.bind = (function(bind) {
       var lastId = 0;
       return function(name, fn) {
-        var jself   = $(this);
-        var _href   = jself.attr("href");
-        var _golfid = jself.attr("golfid");
-        if (name == "click") {
-          if (!_golfid) {
-            ++lastId;
-            jself.attr("golfid", lastId);
-          }
-          if (_href) {
-            jself.data("_golf_oldfn", fn);
-
-            if (_href && _href.charAt(0) != "#")
-              jself.data("_golf_oldhref", 
-                  "/"+_href.replace(/^(http:\/\/)?([^\/]\/?)*\/\//g, ""));
-            else if (jself.attr("href"))
-              jself.data("_golf_oldhref", _href.replace(/^#/, ""));
-
-            jself.attr({
-              rel:  "nofollow",
-              href: "?target="+lastId+"&event=onclick"
-            });
-            fn = function() {
-              var argv = Array.prototype.slice.call(arguments);
-              if ($(this).data("_golf_oldfn").apply(jss, argv) !== false) {
-                $(this).attr("href", servletUrl+$(this).data("_golf_oldhref"));
-                $.golf.location($(this).data("_golf_oldhref"));
-              }
-            };
-          } else {
-            var a = "<a rel='nofollow' href='?target="+lastId+
-              "&amp;event=onclick'></a>";
-            jself.wrap(a);
-            jself._golf_addClass("golfproxylink");
-          }
-        } else if (name == "submit") {
-          if (!_golfid) {
-            ++lastId;
-            jself.attr("golfid", lastId);
-            jself.append(
-              "<input type='hidden' name='event' value='onsubmit'/>");
-            jself.append(
-              "<input type='hidden' name='target' value='"+lastId+"'/>");
-            if (!$.golf.events[lastId])
-              $.golf.events[lastId] = [];
-          }
-          $.golf.events[jself.attr("golfid")].push(fn);
+        var jself = $(this);
+        if (name == "submit") {
+          var oldfn = fn;
+          fn = function() {
+            var argv = Array.prototype.slice.call(arguments);
+            try {
+              oldfn.apply(this, argv);
+            } catch(e) {
+              d(e.stack);
+              $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
+            }
+            return false;
+          };
         }
         return bind.call(jself, name, fn);
       };
     })($.fn.bind);
-
-    $.fn.trigger = (function(trigger) {
-      return function(type, data) {
-        var jself = $(this);
-        // FIXME: this is here because hunit stops firing js submit events
-        if (type == "submit") {
-          var tmp = $.golf.events[jself.attr("golfid")];
-          return $.each(tmp, function(){
-            this.call(jself, type, data);
-          });
-        } else {
-          return trigger.call($(this), type, data);
-        }
-      };
-    })($.fn.trigger);
-  }
-
-  $.fn.val = (function(val) {
-    return function(newVal) {
-      if (arguments.length == 0)
-        return $.trim(val.call($(this)));
-      else
-        return val.call($(this), newVal);
-    };
-  })($.fn.val);
-
-  $.ajax = (function(ajax) {
-    return function(options) {
-      options.async = false;
-      return ajax(options);
-    };
-  })($.ajax);
-
-} else {
-
-  $.fn.bind = (function(bind) {
-    var lastId = 0;
-    return function(name, fn) {
-      var jself = $(this);
-      if (name == "submit") {
-        var oldfn = fn;
-        fn = function() {
-          var argv = Array.prototype.slice.call(arguments);
-          try {
-            oldfn.apply(this, argv);
-          } catch(e) {
-            d(e.stack);
-            $.golf.errorPage("Oops!", "<code>"+e.toString()+"</code>");
-          }
-          return false;
-        };
-      }
-      return bind.call(jself, name, fn);
-    };
-  })($.fn.bind);
-
-}
-
-// install overrides on jQ DOM manipulation methods to accomodate components
-
-(function() {
 
     $.each(
       [
