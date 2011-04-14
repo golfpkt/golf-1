@@ -25,7 +25,6 @@ class CompilerTest < Test::Unit::TestCase
     
   end
 
-
   def test_componentsjs_generation
     a = @reference.components
     b = JSON.parse @compiler.component_json
@@ -38,13 +37,11 @@ class CompilerTest < Test::Unit::TestCase
     assert_equal a,b
   end
 
-
   def test_res_generation_components
     a = @reference.res
     b = JSON.parse @compiler.res_json
 
     assert_equal a["components"], b["components"]
-    #assert_equal a,b
   end
 
   def test_res_generation_plugins
@@ -52,8 +49,6 @@ class CompilerTest < Test::Unit::TestCase
     b = JSON.parse @compiler.res_json
 
     assert_equal a["plugins"], b["plugins"]
-    #assert_equal a["components"], b["components"]
-    #assert_equal a,b
   end
 
   def test_res_generation_img
@@ -61,8 +56,6 @@ class CompilerTest < Test::Unit::TestCase
     b = JSON.parse @compiler.res_json
 
     assert_equal a["img"], b["img"]
-    #assert_equal a["components"], b["components"]
-    #assert_equal a,b
   end
 
   def test_res_generation_styles
@@ -70,19 +63,13 @@ class CompilerTest < Test::Unit::TestCase
     b = JSON.parse @compiler.res_json
 
     assert_equal a["styles"], b["styles"]
-    #assert_equal a["components"], b["components"]
-    #assert_equal a,b
   end
 
   def test_res_generation_scripts
     a = @reference.res
     b = JSON.parse @compiler.res_json
     assert_equal a["scripts"], b["scripts"]
-    #assert_equal a["components"], b["components"]
-    #assert_equal a,b
   end
-
-
 
   def test_plugin_generation
     a = @reference.plugins
