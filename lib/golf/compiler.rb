@@ -118,11 +118,29 @@ module Golf
             name = path.split('/').last.gsub(".#{type}",'')
           end
           data = filtered_read(path)
-          results = results.merge({ name => { "name" => name, "#{type}" => data }})
+          if type == "html"
+            data_arr = extract_parts(data)
+            results = results.merge({ name => { "name" => name, "html" => data_arr["html"], "css" => data_arr["css"], "js" => data_arr["js"] }})
+          else
+            results = results.merge({ name => { "name" => name, "#{type}" => data }})
+          end
         end
       end
       JSON.dump(results)
     end
+
+    def extract_parts(data)
+      doc = Hpricot(data)
+      arr = {}
+      arr["css"] = (doc/'//style').first.inner_html
+      arr["js"] = (doc/'//script').first.inner_html
+      (doc/'//style').remove
+      (doc/'//script').remove
+      arr["html"] = doc.to_s
+      arr
+    end
+
+
     
     def filtered_read(path)
       data = File.read(path)
