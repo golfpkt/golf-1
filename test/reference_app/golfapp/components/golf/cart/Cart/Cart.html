@@ -1,0 +1,16 @@
+<div>
+  <style type="text/golf">
+    div.cart {
+      border: 1px solid blue;
+    }
+  </style>
+  <script type="text/golf">
+    function() {
+      this.add_product = function(product) {
+        $(".cart ul").append("<li>" + product +"</li>");
+      };
+    }
+  </script>
+  <h3>Your Cart</h3>
+  <div class="cart"><ul></ul></div>
+</div>

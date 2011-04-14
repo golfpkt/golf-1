@@ -1,24 +1,64 @@
 require 'test_helper'
+require 'ostruct'
+
+
 
 class CompilerTest < Test::Unit::TestCase
 
+  def parse_file(js)
+    file = File.read(js)
+    arr = file.split(';;')
+    result = OpenStruct.new
+    result.components = JSON.parse arr[0].gsub('jQuery.golf.components=','')
+    result.res = JSON.parse arr[1].gsub('jQuery.golf.res=','')
+    result.plugins = JSON.parse arr[2].gsub('jQuery.golf.plugins=','')
+    result.scripts = JSON.parse arr[3].gsub('jQuery.golf.scripts=','')
+    result.styles = JSON.parse arr[4].gsub('jQuery.golf.styles=','')
+    result
+  end
+  
+
+
   def setup
-    @compiler = Golf::Compiler.new(File.expand_path("../twitter_compiled", __FILE__))
-    @reference_file = File.read(File.expand_path("../twitter_compiled/golfapp/components.js", __FILE__))
+    @compiler = Golf::Compiler.new(File.expand_path("../reference_app", __FILE__))
+    @reference_file = File.expand_path("../reference_app/golfapp/components.js", __FILE__)
+    @reference = parse_file(@reference_file)
   end
 
 
   def test_componentsjs_generation
-    componentjs = @compiler.generate_componentsjs
-    known_good = File.read(File.expand_path("../twitter_compiled/golfapp/components.js", __FILE__))
-    assert_equal componentjs.gsub(' ','').gsub('\n','').gsub('\\',''), known_good.gsub(' ','').gsub('\n','').gsub('\\','')
+    a = @reference.components
+    b = JSON.parse @compiler.component_json
+    assert_equal a,b
   end
 
+  def test_res_generation
+    a = @reference.res
+    b = JSON.parse @compiler.res_json
+    assert_equal a,b
+  end
+
+  def test_plugin_generation
+    a = @reference.plugins
+    b = JSON.parse @compiler.plugin_json
+    assert_equal a,b
+  end
+
+  def test_scripts_generation
+    a = @reference.scripts
+    b = JSON.parse @compiler.script_json
+    assert_equal a,b
+  end
+
+  def test_styles_generation
+    a = @reference.styles
+    b = JSON.parse @compiler.style_json
+    assert_equal a,b
+  end
 
   def test_package_name_resolution
     result = @compiler.package_name '/asd/asdasd/golfapp/components/golf/twitter/Tweet/Tweet.html'
     assert_equal 'golf.twitter.Tweet', result
-
   end
 
 

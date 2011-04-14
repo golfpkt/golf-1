@@ -4,8 +4,10 @@ module Golf
 
     require 'find'
 
-    def initialize(golfpath = ".")
-      @golfpath = "#{golfpath}/golfapp"
+    attr_accessor :golfpath
+
+    def initialize(golfpath = '.')
+      self.golfpath = "#{golfpath}/golfapp"
       puts "golf #{Golf::VERSION}: starting compiler in #{@golfpath}..."
       puts "golf #{Golf::VERSION}: is valid golfapp?: #{Golf::Compiler.valid?(@golfpath)}"
     end
@@ -63,23 +65,25 @@ module Golf
       results = {}
       mypath  = dir.split('').last == "/" ? dir : dir+"/"
       myroot  = @golfpath.split('').last == "/" ? @golfpath : @golfpath+"/"
-      Find.find(mypath) do |path|
-        e = path.slice(mypath.length, path.length-mypath.length)
-        r = path.slice(myroot.length, path.length-myroot.length)
-        f = URI.escape(e)
-        g = File.basename(e)
-        h = File.dirname(r) == "." ? [] : File.dirname(r).split("/")
-        if FileTest.directory?(path)
-          next
-        else
-          r2 = results
-          h.each { |i|
-            if ! r2[i]
-              r2[i] = {} 
-            end
-            r2 = r2[i]
-          }
-          r2[g] = f
+      if File.exists?(mypath)
+        Find.find(mypath) do |path|
+          e = path.slice(mypath.length, path.length-mypath.length)
+          r = path.slice(myroot.length, path.length-myroot.length)
+          f = URI.escape(e)
+          g = File.basename(e)
+          h = File.dirname(r) == "." ? [] : File.dirname(r).split("/")
+          if FileTest.directory?(path)
+            next
+          else
+            r2 = results
+            h.each { |i|
+              if ! r2[i]
+                r2[i] = {} 
+              end
+              r2 = r2[i]
+            }
+            r2[g] = f
+          end
         end
       end
       results

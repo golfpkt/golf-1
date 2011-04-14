@@ -1,0 +1,21 @@
+<div>
+  <style type="text/golf">
+  </style>
+  <script type="text/golf">
+    function(product) {
+      $('li span').text(product.name);
+      $('li').attr('id', product.id);
+
+      this.onAppend = function() {
+        d("got hereeeeee");
+        $('li .add_to_cart').click(function(e){
+          d("click!");
+          var id = $(e.target).parent().attr('id');
+          window.cart.add_product(id);
+          return false;
+        });
+      };
+    }
+  </script>
+  <li><span></span><button class="add_to_cart">Add</button></li>
+</div>

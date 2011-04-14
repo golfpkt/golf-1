@@ -1,0 +1,19 @@
+<div>
+  <style type="text/golf">
+  </style>
+  <script type="text/golf">
+    function() {
+      var draw_products = function(data){
+        $.each(data, function(index, item){
+          $('.product_listing ul')
+            .append(new Component.golf.cart.Product(item.product));
+        })
+      }
+      $.getJSON('/products.json', draw_products);
+    }
+  </script>
+  <div class="product_listing">
+    <ul>
+    </ul>
+  </div>
+</div>

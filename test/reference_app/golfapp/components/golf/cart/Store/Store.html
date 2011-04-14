@@ -1,0 +1,18 @@
+<div>
+  <style type="text/golf">
+    div.container {
+      border: 1px solid red;
+    }
+  </style>
+  <script type="text/golf">
+    function() {
+      window.cart = new Component.golf.cart.Cart();
+      $(".container").append(new Component.golf.cart.ProductListing());
+      $(".container").append(window.cart);
+    }
+  </script>
+  <div class="container">
+    <h1>Welcome to the Store</h1>
+    <a href="#/blah/">Click here for a nice NOT FOUND message!</a>
+  </div>
+</div>
