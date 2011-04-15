@@ -149,15 +149,14 @@ module Golf
       arr = {}
       css = (doc/'//style').first
       if css
-        arr["css"] = css
+        arr["css"] = css.inner_html
       end
       js = (doc/'//script').first
       if js
-        arr["js"] = js
+        arr["js"] = js.inner_html
       end
       (doc/'//style').remove
       (doc/'//script').remove
-
 
       arr["html"] = doc.to_s
 
