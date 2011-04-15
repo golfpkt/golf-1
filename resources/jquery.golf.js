@@ -398,6 +398,7 @@ function componentConstructor(name) {
       obj._dom.data("_golf_component", obj);
       obj._dom.data("_golf_constructing", true);
       obj.require = $fake.require;
+      obj.$ = $fake;
       checkForReservedClass(obj._dom.children().find("*"));
       doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
       obj._dom.removeData("_golf_constructing");
@@ -622,38 +623,20 @@ $.golf = {
                .replace(/"/g,   "&quot;");
   },
 
-  addComponent: function(data, name) {
-    var orig = data;
-    var js = 
-      data
-        .replace(/^(.|\n)*<script +type *= *("text\/golf"|'text\/golf')>/, "")
-        .replace(/<\/script>(.|\n)*$/, "");
-    var css = 
-      data
-        .replace(/^(.|\n)*<style +type *= *("text\/golf"|'text\/golf')>/, "")
-        .replace(/<\/style>(.|\n)*$/, "");
-    var html = $("<div/>")._golf_append(
-      $(data)._golf_addClass("component")
-             ._golf_addClass(name.replace(".", "-"))
+  addComponent: function(cmp) {
+    cmp.html = $("<div/>")._golf_append(
+      $(cmp.html)._golf_addClass("component")
+             ._golf_addClass(cmp.name.replace(".", "-"))
     );
-    html.find("style,script").remove();
-    var cmp  = { 
-      "orig"  : orig,
-      "name"  : name,
-      "html"  : html.html(),
-      "dom"   : $(html.html()),
-      "css"   : css,
-      "js"    : js 
-    };
+    cmp.dom = $(cmp.html.html());
+
     var m, pkg;
 
-    $.golf.components[name] = cmp;
-
-    if (!(m = name.match(/^(.*)\.([^.]+)$/)))
-      m = [ "", "", name ];
+    if (!(m = cmp.name.match(/^(.*)\.([^.]+)$/)))
+      m = [ "", "", cmp.name ];
 
     pkg = makePkg(m[1]);
-    pkg[m[2]] = componentConstructor(name);
+    pkg[m[2]] = componentConstructor(cmp.name);
   },
 
   setupComponents: function() {
@@ -675,7 +658,7 @@ $.golf = {
 
     d("Loading components/ directory...");
     for (name in $.golf.components)
-      $.golf.addComponent($.golf.components[name].html, name);
+      $.golf.addComponent($.golf.components[name]);
 
     if (!window.forcebot) {
       d("Loading styles/ directory...");
