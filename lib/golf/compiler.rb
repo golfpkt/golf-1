@@ -120,7 +120,7 @@ module Golf
       Dir["#{@golfpath}/components/**/*"].each do |path|
         name = package_name(path)
         valid_arr = path_valid_for_filtering?(path)
-        next if FileTest.directory?(path) or !path.include?('.html')
+        next if FileTest.directory?(path) or !path.include?('.html') or path.include?('~')
         data = filtered_read(path)
         data_arr = extract_parts(data, path)
         results = results.merge({ name => { "name" => name, "html" => data_arr["html"], "css" => data_arr["css"], "js" => data_arr["js"] }})
@@ -133,6 +133,7 @@ module Golf
       results = {}
       if File.exists?(dir) and File.directory?(dir)
         Dir["#{dir}/**/*.#{type}"].sort.reverse.each do |path|
+          next if path.include?('~')
           name = path.split('/').last.gsub(".#{type}",'')
           data = filtered_read(path)
           results = results.merge({ name => { "name" => name, "#{type}" => data }})
@@ -147,14 +148,21 @@ module Golf
       #load from file
       doc = Hpricot(data)
       arr = {}
+
       css = (doc/'//style').first
       if css
         arr["css"] = css.inner_html
+      else
+        arr["css"] = ""
       end
+
       js = (doc/'//script').first
       if js
         arr["js"] = js.inner_html
+      else
+        arr["js"] = ""
       end
+
       (doc/'//style').remove
       (doc/'//script').remove
 
@@ -162,6 +170,7 @@ module Golf
 
       #load from files, ".js.coffee", etc
       Dir["#{component_dir}/*"].each do |file_path|
+        next if file_path.include('~')
         valid_arr = path_valid_for_filtering?(file_path)
         if valid_arr
           filter_name = valid_arr[1]
