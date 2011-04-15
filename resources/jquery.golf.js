@@ -1,30 +1,28 @@
 (function($) {
 
 function toJson(obj) {
- switch (typeof obj) {
-  case 'object':
-   if (obj) {
-    var list = [];
-    if (obj instanceof Array) {
-     for (var i=0;i < obj.length;i++) {
-      list.push(toJson(obj[i]));
-     }
-     return '[' + list.join(',') + ']';
-    } else {
-     for (var prop in obj) {
-      list.push('"' + prop + '":' + toJson(obj[prop]));
-     }
-     return '{' + list.join(',') + '}';
-    }
-   } else {
-    return 'null';
-   }
-  case 'string':
-   return '"' + obj.replace(/(["'])/g, '\\$1') + '"';
-  case 'number':
-  case 'boolean':
-   return new String(obj);
- }
+  switch (typeof obj) {
+    case 'object':
+      if (obj) {
+        var list = [];
+        if (obj instanceof Array) {
+          for (var i=0;i < obj.length;i++)
+            list.push(toJson(obj[i]));
+          return '[' + list.join(',') + ']';
+        } else {
+          for (var prop in obj)
+            list.push('"' + prop + '":' + toJson(obj[prop]));
+          return '{' + list.join(',') + '}';
+        }
+      } else {
+        return 'null';
+      }
+    case 'string':
+      return '"' + obj.replace(/(["'])/g, '\\$1') + '"';
+    case 'number':
+    case 'boolean':
+      return new String(obj);
+  }
 }
 
 function Component() {
@@ -35,6 +33,9 @@ function Component() {
   };
   this.show = function() {
     this._dom.show(Array.prototype.slice.call(arguments));
+  };
+  this.toggle = function() {
+    this._dom.toggle(Array.prototype.slice.call(arguments));
   };
 }
 
@@ -400,6 +401,25 @@ function componentConstructor(name) {
       obj.require = $fake.require;
       obj.$ = $fake;
       checkForReservedClass(obj._dom.children().find("*"));
+      
+      // find <component> elements and replace them w/components
+      obj._dom.find("component").each(function(i,v) {
+        var jself = $(v), type, ref, argv, c, i, attrs, attr;
+        for (i=0,attrs=v.attributes,argv={};i<attrs.length;i++) {
+          attr = attrs.item(i);
+          switch (attr.nodeName) {
+            case "new": type = attr.nodeValue; break;
+            case "ref": ref  = attr.nodeValue; break;
+            default: argv[attr.nodeName]=attr.nodeValue;
+          }
+        }
+        eval("c = Component."+type);
+        c = new c(argv);
+        jself.replaceWith(c);
+        if (ref)
+          obj[ref] = c;
+      });
+
       doCall(obj, $fake, $fake, argv, cmp.js, Debug(name));
       obj._dom.removeData("_golf_constructing");
       jss.mark(obj._dom.children().eq(0));
@@ -444,6 +464,13 @@ window.Component  = Component;
       };
     })($.fn.bind);
 
+    function doOnAppend(cmp) {
+      if (!cmp.didOnAppend) {
+        cmp.didOnAppend = true;
+        cmp.onAppend();
+      }
+    }
+
     $.each(
       [
         "append",
@@ -468,10 +495,14 @@ window.Component  = Component;
           $("*", e).each(function(index, elem) {
             var cmp = $(elem).data("_golf_component");
             if (cmp instanceof Component && cmp.onAppend)
-              cmp.onAppend();
+              doOnAppend(cmp);
           });
-          if (a instanceof Component && a.onAppend)
-            a.onAppend();
+          if (a instanceof Component) {
+            // run onAppend event handler if one is defined
+            if (a.onAppend)
+              doOnAppend(a);
+          }
+
           return $(this);
         }; 
       }
@@ -482,8 +513,12 @@ window.Component  = Component;
       var cmps = [];
       $("*", this).add([this]).each(function(index, elem) {
         var cmp = $(elem).data("_golf_component");
-        if (cmp)
+        // save component<->dom mapping and remove onAppend flag
+        if (cmp) {
           cmps.push({component: cmp, dom: elem});
+          // this will cause onAppend to run on next insertion into the dom
+          cmp.didOnAppend = false;
+        }
         if ($(this).attr("golfid"))
           $.golf.events[$(this).attr("golfid")] = [];
       });
@@ -616,18 +651,14 @@ $.golf = {
       return $.golf.location.hash;
   },
 
-  htmlEncode: function(text) {
-    return text.replace(/&/g,   "&amp;")
-               .replace(/</g,   "&lt;")
-               .replace(/>/g,   "&gt;")
-               .replace(/"/g,   "&quot;");
-  },
-
-  addComponent: function(cmp) {
+  createComponent: function(cmp) {
+    // create dom elements from html source
     cmp.html = $("<div/>")._golf_append(
       $(cmp.html)._golf_addClass("component")
              ._golf_addClass(cmp.name.replace(".", "-"))
     );
+
+    // strip off the wrapper div and set component dom elements
     cmp.dom = $(cmp.html.html());
 
     var m, pkg;
@@ -658,7 +689,7 @@ $.golf = {
 
     d("Loading components/ directory...");
     for (name in $.golf.components)
-      $.golf.addComponent($.golf.components[name]);
+      $.golf.createComponent($.golf.components[name]);
 
     if (!window.forcebot) {
       d("Loading styles/ directory...");
