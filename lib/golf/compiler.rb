@@ -1,5 +1,15 @@
 module Golf
 
+  module Filter
+    class Upcase
+      def self.transform(data)
+        data.upcase
+      end
+    end
+
+  end
+
+  
   class Compiler
 
     require 'find'
@@ -26,7 +36,7 @@ module Golf
     end
 
     def component_json
-      traverse("#{@golfpath}/components", "html")
+      traverse_components
     end
 
     def res_json
@@ -105,49 +115,73 @@ module Golf
       traverse("#{@golfpath}/styles", "css")
     end
 
-    def traverse(dir, type)
+    def traverse_components
       results = {}
-      if File.exists?(dir) and File.directory?(dir)
-        Dir["#{dir}/**/*.#{type}"].sort.reverse.each do |path|
-          if type == "html"
-            name = package_name(path)
-            arr = path.split('/')
-            last_two = arr.slice(arr.length - 2 ,2)
-            next if last_two[0] != last_two[1].gsub('.html','')
-          else
-            name = path.split('/').last.gsub(".#{type}",'')
-          end
-          data = filtered_read(path)
-          if type == "html"
-            data_arr = extract_parts(data)
-            results = results.merge({ name => { "name" => name, "html" => data_arr["html"], "css" => data_arr["css"], "js" => data_arr["js"] }})
-          else
-            results = results.merge({ name => { "name" => name, "#{type}" => data }})
-          end
-        end
+      Dir["#{@golfpath}/components/**/*"].each do |path|
+        name = package_name(path)
+        valid_arr = path_valid_for_filtering?(path)
+        next if FileTest.directory?(path) or !path.include?('.html')
+        data = filtered_read(path)
+        data_arr = extract_parts(data, path)
+        results = results.merge({ name => { "name" => name, "html" => data_arr["html"], "css" => data_arr["css"], "js" => data_arr["js"] }})
       end
       JSON.dump(results)
     end
 
-    def extract_parts(data)
+
+    def traverse(dir, type)
+      results = {}
+      if File.exists?(dir) and File.directory?(dir)
+        Dir["#{dir}/**/*.#{type}"].sort.reverse.each do |path|
+          name = path.split('/').last.gsub(".#{type}",'')
+          data = filtered_read(path)
+          results = results.merge({ name => { "name" => name, "#{type}" => data }})
+        end
+      end
+      JSON.dump(results)
+    end
+    
+    def extract_parts(data, path)
+      component_name = path.split('/').last
+      component_dir = path.gsub(component_name, '')
+      #load from file
       doc = Hpricot(data)
       arr = {}
-      arr["css"] = (doc/'//style').first.inner_html
-      arr["js"] = (doc/'//script').first.inner_html
+      css = (doc/'//style').first
+      if css
+        arr["css"] = css
+      end
+      js = (doc/'//script').first
+      if js
+        arr["js"] = js
+      end
       (doc/'//style').remove
       (doc/'//script').remove
+
+
       arr["html"] = doc.to_s
+
+      #load from files, ".js.coffee", etc
+      Dir["#{component_dir}/*"].each do |file_path|
+        valid_arr = path_valid_for_filtering?(file_path)
+        if valid_arr
+          filter_name = valid_arr[1]
+          output_type = valid_arr[0]
+          arr[output_type] = filtered_read(file_path)
+        else
+          extension = file_path.split('/').last.split('.').last
+          arr[extension] = File.read(file_path)
+        end
+      end
       arr
     end
-
-
     
     def filtered_read(path)
       data = File.read(path)
       if path.split('.').last == 'html'
         data = filter_by_block(data)
       end
-      data = filter_by_extension(data)
+      data = filter_by_extension(data, path)
       data
     end
     
@@ -173,9 +207,29 @@ module Golf
         data
       end
     end
-    
-    def filter_by_extension(data)
-      data
+
+    def path_valid_for_filtering?(path)
+      path_arr = path.split('/').last.split('.')
+      if path_arr.count > 2
+        last_two = path_arr[path_arr.length - 2..path_arr.length]
+        if last_two[0] == "js" or last_two[0] == "css" or last_two[0] == "html"
+          last_two
+        end
+      end
+    end
+
+    def filter_by_extension(data, path)
+      valid_arr = path_valid_for_filtering?(path)
+      if valid_arr
+        filter_name = valid_arr[1].capitalize.to_sym
+        if Golf::Filter.constants.include?(filter_name)
+          Golf::Filter.const_get(filter_name).transform(data)
+        else
+          data
+        end
+      else
+        data
+      end
     end
     
     def package_name(path)
