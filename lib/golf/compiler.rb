@@ -170,7 +170,7 @@ module Golf
 
       #load from files, ".js.coffee", etc
       Dir["#{component_dir}/*"].each do |file_path|
-        next if file_path.include('~')
+        next if file_path.include?('~')
         valid_arr = path_valid_for_filtering?(file_path)
         if valid_arr
           filter_name = valid_arr[1]
