@@ -12,5 +12,5 @@ Rake::TestTask.new("test") do |t|
 end
 
 task 'push' do
-  `gem build golf.gemspec |awk '$1 ~ / *File:/ {print $2}' |xargs gem push`
+  puts `gem build golf.gemspec |awk '$1 ~ / *File:/ {print $2}' |xargs gem push && gem build golf.gemspec |awk '$1 ~ / *File:/ {print $2}' | curl -u $(git config user.convore) -F message="<-" -F https://convore.com/api/topics/19590/messages/create.json`
 end
