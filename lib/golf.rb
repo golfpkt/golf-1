@@ -4,5 +4,4 @@ require "golf/compiler"
 require "golf/rack"
 require "golf/cli"
 require "golf/version"
-require "golf/filter"
 
