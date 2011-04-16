@@ -132,8 +132,9 @@ module Golf
     def traverse(dir, type)
       results = {}
       if File.exists?(dir) and File.directory?(dir)
-        Dir["#{dir}/**/*.#{type}"].sort.reverse.each do |path|
-          next if path.include?('~')
+        Dir["#{dir}/**/*"].sort.reverse.each do |path|
+          puts path
+          next if path.include?('~') or !path.include?(".#{type}")
           name = path.split('/').last.gsub(".#{type}",'')
           data = filtered_read(path)
           results = results.merge({ name => { "name" => name, "#{type}" => data }})

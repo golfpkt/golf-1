@@ -1,7 +1,9 @@
 PATH
   remote: .
   specs:
-    golf (0.5.3)
+    golf (0.6.21)
+      compass
+      haml
       hpricot
       json
       rack
@@ -10,6 +12,9 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    compass (0.10.6)
+      haml (>= 3.0.4)
+    haml (3.0.25)
     hpricot (0.8.4)
     json (1.5.1)
     rack (1.2.2)
