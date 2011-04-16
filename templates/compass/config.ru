@@ -1,10 +1,6 @@
 require 'rubygems'
-require 'bundler'
+require 'bundler/setup'
 
 Bundler.require
 
-require './demo'
-
-use DemoBackend
 run Golf::Rack.new
-
