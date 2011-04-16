@@ -133,7 +133,6 @@ module Golf
       results = {}
       if File.exists?(dir) and File.directory?(dir)
         Dir["#{dir}/**/*"].sort.reverse.each do |path|
-          puts path
           next if path.include?('~') or !path.include?(".#{type}")
           name = path.split('/').last.gsub(".#{type}",'')
           data = filtered_read(path)

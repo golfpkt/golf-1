@@ -1,3 +1,3 @@
 module Golf
-  VERSION = "0.6.22"
+  VERSION = "0.6.3"
 end
