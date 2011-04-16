@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Golf::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Micha Niskin, Alan Dipert, Julio Capote"]
-  s.email       = ["michaniskin@gmail.com"]
+  s.email       = ["micha.niskin@gmail.com"]
   s.homepage    = "http://golf.github.com"
   s.summary     = %q{Component based front end JS Framework}
   s.description = %q{Golf lets you write your interface in terms of reusable, simple components.}
