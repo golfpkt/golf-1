@@ -163,8 +163,11 @@ module Golf
         arr["js"] = ""
       end
 
+      
       (doc/'//style').remove
       (doc/'//script').remove
+      
+      puts doc.to_s
 
       arr["html"] = doc.to_s
 
