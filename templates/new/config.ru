@@ -1,4 +1,6 @@
 require 'rubygems'
-require 'golf'
+require 'bundler'
+
+Bundler.require
 
 run Golf::Rack.new

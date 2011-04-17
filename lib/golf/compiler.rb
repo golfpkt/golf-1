@@ -163,9 +163,10 @@ module Golf
         arr["js"] = ""
       end
 
+      
       (doc/'//style').remove
       (doc/'//script').remove
-
+      
       arr["html"] = doc.to_s
 
       #load from files, ".js.coffee", etc
@@ -178,7 +179,7 @@ module Golf
           arr[output_type] = filtered_read(file_path)
         else
           extension = file_path.split('/').last.split('.').last
-          arr[extension] = File.read(file_path)
+          arr[extension] = File.read(file_path) unless extension == "html"
         end
       end
       arr
