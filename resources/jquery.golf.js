@@ -55,7 +55,8 @@ function $local(selector, root) {
             .find("*")
             .andSelf()
             .filter(selector)
-            .not($(".component *", root).get());
+            .not($(".component *", root).get())
+            .not($("* .component", root).get());
 }
 
 function checkForReservedClass(elems, shutup) {
@@ -375,13 +376,15 @@ function componentConstructor(name) {
       if (context != null)
         return $(context)
                   .find(selector)
-                  .not($(".component *", obj._dom).get());
+                  .not($(".component *", obj._dom).get())
+                  .not($("* .component", context).get());
       else 
         return $(obj._dom)
                   .find("*")
                   .andSelf()
                   .filter(selector)
-                  .not($(".component *", obj._dom).get());
+                  .not($(".component *", obj._dom).get())
+                  .not($("* .component", obj._dom).get());
     };
 
     $.extend($fake, $);

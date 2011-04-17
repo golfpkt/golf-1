@@ -1,0 +1,19 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    golf (0.0.4)
+      thor
+    rack (1.2.2)
+    rack-contrib (1.1.0)
+      rack (>= 0.9.1)
+    rack-rewrite (1.0.2)
+    thor (0.14.6)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  golf
+  rack
+  rack-contrib
+  rack-rewrite
