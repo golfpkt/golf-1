@@ -673,6 +673,25 @@ $.golf = {
   setupComponents: function() {
     var cmp, name, i, m, scripts=[];
 
+    $.golf.mappings = {
+      "foo": "golf.cart.Product"
+    };
+
+    document.createElement = (function(orig) {
+      return function() {
+        var argv = Array.prototype.slice.call(arguments);
+        var i, c;
+        for (i in $.golf.mappings) {
+          if (i == argv[0].toLowerCase()) {
+            eval("c = Component."+$.golf.mappings[i]);
+            return (new c())._dom.get()[0];
+          } else {
+            return orig.apply(this, argv);
+          }
+        }
+      };
+    })(document.createElement);
+
     d("Setting up components now.");
 
     d("Loading scripts/ directory...");
