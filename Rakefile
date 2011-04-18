@@ -1,5 +1,6 @@
 require 'bundler'
 require 'rake/testtask'
+require 'convore-simple'
 
 Bundler::GemHelper.install_tasks
 
@@ -12,5 +13,7 @@ Rake::TestTask.new("test") do |t|
 end
 
 task 'push' do
-  puts `gem build golf.gemspec |awk '$1 ~ / *File:/ {print $2}' |xargs gem push &&  gem build golf.gemspec |awk '$1 ~ / *File:/ {printf($2)}' | curl -u $(git config user.convore) -F message="<-" https://convore.com/api/topics/19590/messages/create.json`
+  myversion = `gem build golf.gemspec |awk '$1 ~ / *File:/ {printf($2)}'`
+  puts `gem push #{myversion}`
+  ConvoreSimple::Topic.say(myversion)
 end
