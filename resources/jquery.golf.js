@@ -724,7 +724,8 @@ $.golf = {
   },
 
   route: function(hash, b) {
-    var theHash, theRoute, theAction, i, x, pat, match;
+    var theHash, theRoute, theAction, theParams, i, j, x, match,
+        params;
     if (!hash)
       hash = String($.golf.defaultRoute+"/").replace(/\/+$/, "/");
 
@@ -738,11 +739,18 @@ $.golf = {
     try {
       if ($.golf.controller.length > 0) {
         for (i=0; i<$.golf.controller.length && theAction===null; i++) {
-          theRoute = "^"+$.golf.controller[i].route+"$";
-          match = $.isFunction(theRoute) ? theRoute(theHash) 
-                    : theHash.match(new RegExp(theRoute));
-          if (match)
-            (theAction = $.golf.controller[i].action)(b, match);
+          theRoute    = $.golf.controller[i].route;
+          theParams   = $.map(theRoute.split("/"), function(v,i) {
+              return v.charAt(0) == ":" ? v.substring(1) : null;
+          });
+          theRoute    = theRoute.replace(/\/:[^\/]+/g, "/([^/]+)");
+          match       = theHash.match(new RegExp("^"+theRoute+"$"));
+          params      = {};
+          if (match) {
+            for (j=1; j<match.length; j++)
+              params[theParams[j-1]] = match[j];
+            (theAction = $.golf.controller[i].action)(b, params);
+          }
         }
         if (theAction === null)
           $.golf.errorPage("Not Found", "<span>There is no route "
