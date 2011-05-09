@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    golf (0.6.21)
+    golf (0.7.7)
       compass
       haml
       hpricot

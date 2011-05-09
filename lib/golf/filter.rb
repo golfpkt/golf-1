@@ -4,8 +4,6 @@ require 'compass'
 require 'fileutils'
 require 'erb'
 
-Compass.add_project_configuration("doesnt/really/matter")
-
 module Golf
   module Filter
     class Scss
