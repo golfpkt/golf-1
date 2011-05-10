@@ -173,7 +173,8 @@ var jss = {
           jself._golf_css(i, "");
         jself.data("_golf_jss_log", {});
         jself.data("_golf_jss_spc", {});
-        jself._golf_css(jself.data("_golf_css_log"));
+        if (jself.data("_golf_css_log"))
+          jself._golf_css(jself.data("_golf_css_log"));
       }
     );
 
